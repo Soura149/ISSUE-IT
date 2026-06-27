@@ -39,6 +39,27 @@ const SubmissionForm = ({ userLocation, onComplete }) => {
     }
   };
 
+  const uploadImageToCloudinary = async (file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('upload_preset', import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET);
+
+    const response = await fetch(
+      `https://api.cloudinary.com/v1_1/${import.meta.env.VITE_CLOUDINARY_CLOUD_NAME}/image/upload`,
+      {
+        method: 'POST',
+        body: formData,
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error('Cloudinary asset upload failed');
+    }
+    
+    const data = await response.json();
+    return data.secure_url; 
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!userLocation) {
@@ -47,6 +68,12 @@ const SubmissionForm = ({ userLocation, onComplete }) => {
     }
     setSubmitting(true);
     try {
+      let finalPhotoUrl = photoUrl;
+      if (file) {
+        // Unsigned Cloudinary Upload
+        finalPhotoUrl = await uploadImageToCloudinary(file);
+      }
+
       await createIssue({
         latitude: userLocation.latitude,
         longitude: userLocation.longitude,
@@ -54,7 +81,7 @@ const SubmissionForm = ({ userLocation, onComplete }) => {
         severity: formData.severity || 'low',
         description: formData.description,
         ai_description: formData.description, // in real app, might be distinct
-        photo_url: photoUrl || "https://images.unsplash.com/photo-1515162816999-a0c47dc192f7?auto=format&fit=crop&q=80&w=400", // fallback demo
+        photo_url: finalPhotoUrl || "https://images.unsplash.com/photo-1515162816999-a0c47dc192f7?auto=format&fit=crop&q=80&w=400", // fallback demo
       });
       onComplete(); // Go back to feed
     } catch (error) {
