@@ -65,47 +65,45 @@ const SubmissionForm = ({ userLocation, onComplete }) => {
   };
 
   return (
-    <div className="container relative mt-4">
-      <div className="header">
-        <h1 className="text-xl font-bold">Report Issue</h1>
-        <p className="text-muted">Capture and submit a civic hazard</p>
+    <div className="flex flex-col gap-6">
+      <div className="border-b-4 border-black pb-4">
+        <h1 className="text-4xl font-black uppercase tracking-tight leading-none">Report Issue</h1>
+        <p className="font-mono font-bold uppercase mt-2">Capture and submit a civic hazard</p>
       </div>
 
-      <form onSubmit={handleSubmit} className="flex-col gap-4">
+      <form onSubmit={handleSubmit} className="flex flex-col gap-6">
         {/* Multimodal Input Layout */}
-        <div className="card text-center relative overflow-hidden" style={{ minHeight: '200px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div className="relative overflow-hidden border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] bg-white flex flex-col items-center justify-center p-8 min-h-[250px]">
           {(processing || submitting) && (
-            <div className="overlay">
-              <div className="flex-col items-center gap-2">
-                <div className="spinner"></div>
-                <p className="font-semibold">{processing ? "AI Analysis in Progress..." : "Publishing Issue..."}</p>
-              </div>
+            <div className="absolute inset-0 bg-white/90 z-10 flex flex-col items-center justify-center border-4 border-black m-2">
+              <div className="spinner border-black mb-4"></div>
+              <p className="font-black uppercase text-xl text-center px-4">{processing ? "AI Analysis in Progress..." : "Publishing Issue..."}</p>
             </div>
           )}
 
           {photoUrl ? (
-            <img src={photoUrl} alt="Preview" className="w-full h-full object-cover rounded-lg" style={{ position: 'absolute', top: 0, left: 0 }} />
+            <img src={photoUrl} alt="Preview" className="absolute inset-0 w-full h-full object-cover" />
           ) : (
-            <div className="flex-col items-center gap-4">
-              <div className="flex gap-4">
+            <div className="flex flex-col items-center gap-6 z-0">
+              <div className="flex flex-wrap justify-center gap-4">
                 <button 
                   type="button" 
-                  className="btn btn-outline"
+                  className="border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] bg-white px-4 py-2 font-black uppercase flex items-center gap-2 hover:-translate-x-1 hover:-translate-y-1 hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] transition-all"
                   onClick={() => cameraInputRef.current.click()}
                 >
-                  <Camera size={20} />
+                  <Camera size={24} strokeWidth={3} />
                   Camera
                 </button>
                 <button 
                   type="button" 
-                  className="btn btn-outline"
+                  className="border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] bg-white px-4 py-2 font-black uppercase flex items-center gap-2 hover:-translate-x-1 hover:-translate-y-1 hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] transition-all"
                   onClick={() => fileInputRef.current.click()}
                 >
-                  <Upload size={20} />
+                  <Upload size={24} strokeWidth={3} />
                   Upload
                 </button>
               </div>
-              <p className="text-sm text-muted">Upload a clear photo of the hazard</p>
+              <p className="font-mono font-bold uppercase text-center bg-gray-100 border-2 border-black px-2 py-1">Upload a clear photo of the hazard</p>
             </div>
           )}
           
@@ -114,45 +112,44 @@ const SubmissionForm = ({ userLocation, onComplete }) => {
             accept="image/*" 
             capture="environment" 
             ref={cameraInputRef} 
-            style={{ display: 'none' }} 
+            className="hidden" 
             onChange={handleFileChange} 
           />
           <input 
             type="file" 
             accept="image/*" 
             ref={fileInputRef} 
-            style={{ display: 'none' }} 
+            className="hidden" 
             onChange={handleFileChange} 
           />
         </div>
 
         {/* Auto-populated fields */}
-        <div>
-          <label className="label">Category</label>
+        <div className="flex flex-col gap-2">
+          <label className="font-black uppercase text-xl">Category</label>
           <select 
-            className="select capitalize" 
+            className="border-4 border-black p-3 font-bold text-lg bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] focus:outline-none focus:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] transition-all uppercase appearance-none" 
             value={formData.category} 
             onChange={e => setFormData({...formData, category: e.target.value})}
             required
           >
-            <option value="">Select Category</option>
-            <option value="pothole">Pothole</option>
-            <option value="streetlight">Streetlight</option>
-            <option value="water_leak">Water Leak</option>
-            <option value="waste">Waste</option>
-            <option value="other">Other</option>
+            <option value="">SELECT CATEGORY</option>
+            <option value="pothole">POTHOLE</option>
+            <option value="streetlight">STREETLIGHT</option>
+            <option value="water_leak">WATER LEAK</option>
+            <option value="waste">WASTE</option>
+            <option value="other">OTHER</option>
           </select>
         </div>
 
-        <div>
-          <label className="label">Severity</label>
-          <div className="flex gap-2 mb-4">
+        <div className="flex flex-col gap-2">
+          <label className="font-black uppercase text-xl">Severity</label>
+          <div className="flex flex-wrap gap-4 mt-2">
             {['low', 'medium', 'high', 'critical'].map(sev => (
               <button
                 key={sev}
                 type="button"
-                className={`btn flex-1 capitalize ${formData.severity === sev ? 'btn-primary' : 'btn-outline'}`}
-                style={{ padding: '0.5rem', fontSize: '0.75rem' }}
+                className={`flex-1 min-w-[80px] border-4 border-black p-2 font-black uppercase shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all ${formData.severity === sev ? 'bg-black text-white shadow-none translate-x-[4px] translate-y-[4px]' : 'bg-white text-black hover:-translate-x-1 hover:-translate-y-1 hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]'}`}
                 onClick={() => setFormData({...formData, severity: sev})}
               >
                 {sev}
@@ -161,25 +158,25 @@ const SubmissionForm = ({ userLocation, onComplete }) => {
           </div>
         </div>
 
-        <div>
-          <label className="label">Description</label>
+        <div className="flex flex-col gap-2 mt-4">
+          <label className="font-black uppercase text-xl">Description</label>
           <textarea 
-            className="textarea" 
+            className="border-4 border-black p-3 font-bold text-lg bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] focus:outline-none focus:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] transition-all resize-none" 
             rows="4" 
             value={formData.description}
             onChange={e => setFormData({...formData, description: e.target.value})}
-            placeholder="Describe the issue..."
+            placeholder="DESCRIBE THE HAZARD..."
             required
           />
         </div>
 
         <button 
           type="submit" 
-          className="btn btn-primary w-full mt-4" 
+          className="mt-6 border-4 border-black bg-black text-white p-4 font-black uppercase text-xl flex items-center justify-center gap-2 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] hover:-translate-x-1 hover:-translate-y-1 hover:shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] disabled:opacity-50 disabled:hover:translate-x-0 disabled:hover:translate-y-0 disabled:hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] transition-all" 
           disabled={processing || submitting || !file}
         >
-          <Send size={18} />
-          Publish Issue
+          <Send size={24} strokeWidth={3} />
+          {processing ? 'ANALYZING...' : submitting ? 'PUBLISHING...' : 'PUBLISH ISSUE'}
         </button>
       </form>
     </div>

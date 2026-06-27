@@ -36,60 +36,60 @@ const LocationFeed = ({ userLocation, onSelectIssue }) => {
 
   if (!userLocation) {
     return (
-      <div className="container flex-col items-center justify-center mt-4">
-        <div className="spinner mb-4"></div>
-        <p className="text-muted text-center">Acquiring GPS coordinates...</p>
+      <div className="flex flex-col items-center justify-center mt-10">
+        <div className="spinner mb-4 border-black"></div>
+        <p className="border-4 border-black p-4 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] bg-white font-black uppercase text-center">Acquiring GPS coordinates...</p>
       </div>
     );
   }
 
   return (
-    <div className="container">
-      <div className="header mt-4">
+    <div className="flex flex-col gap-6">
+      <div className="flex justify-between items-end border-b-4 border-black pb-4">
         <div>
-          <h1 className="text-xl font-bold">Local Feed</h1>
-          <p className="text-muted">Showing issues within 1km</p>
+          <h1 className="text-4xl font-black uppercase tracking-tight leading-none">Local Feed</h1>
+          <p className="font-mono font-bold uppercase mt-2">Showing issues within 1km</p>
         </div>
-        <div className="badge badge-open flex items-center gap-2">
-          <MapPin size={14} />
-          GPS Active
+        <div className="font-mono border-2 border-black px-2 py-0.5 text-xs font-bold uppercase bg-white text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] flex items-center gap-1">
+          <MapPin size={12} strokeWidth={3} />
+          GPS
         </div>
       </div>
 
       {loading ? (
         <div className="flex justify-center mt-4">
-          <div className="spinner"></div>
+          <div className="spinner border-black"></div>
         </div>
       ) : issues.length === 0 ? (
-        <div className="card text-center mt-4 p-8">
-          <p className="text-muted">No issues found within 1km.</p>
+        <div className="border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] bg-white text-center p-8 mt-4">
+          <p className="font-black uppercase text-xl">No issues found within 1km.</p>
         </div>
       ) : (
-        <div className="flex-col gap-4 mt-4">
+        <div className="flex flex-col gap-6 mt-2">
           {issues.map(issue => (
             <div 
               key={issue.id} 
-              className="card cursor-pointer hover:border-accent-color transition-colors"
+              className="border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] bg-white p-4 cursor-pointer hover:-translate-x-1 hover:-translate-y-1 hover:shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] transition-all flex flex-col"
               onClick={() => onSelectIssue(issue.id)}
             >
-              <div className="flex justify-between items-center mb-2">
+              <div className="flex justify-between items-start mb-4">
                 <div className="flex items-center gap-2">
-                  <AlertTriangle size={18} className="text-accent" />
-                  <span className="font-semibold capitalize">{issue.category}</span>
+                  <AlertTriangle size={24} strokeWidth={3} />
+                  <span className="font-black uppercase text-xl">{issue.category}</span>
                 </div>
-                <span className={`badge ${issue.status === 'escalated' ? 'badge-escalated' : 'badge-open'}`}>
+                <span className={`font-mono border-2 border-black px-2 py-0.5 text-xs font-bold uppercase shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] ${issue.status === 'escalated' ? 'bg-black text-white' : 'bg-white text-black'}`}>
                   {issue.status}
                 </span>
               </div>
-              <p className="text-sm mb-4">{issue.description || issue.ai_description}</p>
+              <p className="text-base font-bold mb-6">{issue.description || issue.ai_description}</p>
               
-              <div className="flex justify-between items-center text-muted text-sm">
-                <div className="flex items-center gap-2">
-                  <Clock size={14} />
+              <div className="flex justify-between items-center font-mono text-sm border-t-2 border-black pt-4">
+                <div className="flex items-center gap-2 font-bold">
+                  <Clock size={16} strokeWidth={3} />
                   {new Date(issue.created_at).toLocaleDateString()}
                 </div>
-                <div>
-                  Upvotes: <span className="font-bold text-primary">{issue.upvote_count}</span>
+                <div className="font-bold border-2 border-black px-2 py-1 bg-gray-100">
+                  UPVOTES: <span className="text-xl">{issue.upvote_count}</span>
                 </div>
               </div>
             </div>
