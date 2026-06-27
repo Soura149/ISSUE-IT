@@ -6,6 +6,7 @@ const SubmissionForm = ({ userLocation, onComplete }) => {
   const [file, setFile] = useState(null);
   const [photoUrl, setPhotoUrl] = useState(null);
   const [processing, setProcessing] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     category: '',
     severity: '',
@@ -44,7 +45,7 @@ const SubmissionForm = ({ userLocation, onComplete }) => {
       alert("Location is required to submit an issue.");
       return;
     }
-    setProcessing(true);
+    setSubmitting(true);
     try {
       await createIssue({
         latitude: userLocation.latitude,
@@ -59,7 +60,7 @@ const SubmissionForm = ({ userLocation, onComplete }) => {
     } catch (error) {
       console.error("Failed to submit", error);
     } finally {
-      setProcessing(false);
+      setSubmitting(false);
     }
   };
 
@@ -73,11 +74,11 @@ const SubmissionForm = ({ userLocation, onComplete }) => {
       <form onSubmit={handleSubmit} className="flex-col gap-4">
         {/* Multimodal Input Layout */}
         <div className="card text-center relative overflow-hidden" style={{ minHeight: '200px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          {processing && (
+          {(processing || submitting) && (
             <div className="overlay">
               <div className="flex-col items-center gap-2">
                 <div className="spinner"></div>
-                <p className="font-semibold">AI Analysis in Progress...</p>
+                <p className="font-semibold">{processing ? "AI Analysis in Progress..." : "Publishing Issue..."}</p>
               </div>
             </div>
           )}
@@ -175,7 +176,7 @@ const SubmissionForm = ({ userLocation, onComplete }) => {
         <button 
           type="submit" 
           className="btn btn-primary w-full mt-4" 
-          disabled={processing || !file}
+          disabled={processing || submitting || !file}
         >
           <Send size={18} />
           Publish Issue

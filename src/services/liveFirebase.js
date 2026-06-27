@@ -102,7 +102,7 @@ export const classifyUploadedImage = async (imageFile) => {
     });
     
     // Parse the output string as JSON
-    let textResult = response.text().trim();
+    let textResult = response.text.trim();
     if (textResult.startsWith('```json')) {
       textResult = textResult.substring(7, textResult.length - 3).trim();
     }
