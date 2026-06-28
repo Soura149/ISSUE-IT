@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { Upload, Camera, Send } from 'lucide-react';
-import { classifyUploadedImage, createIssue, getIssues, calculateDistance } from '../services/liveFirebase';
+import { classifyUploadedImage, createIssue, getIssues, calculateDistance, validateCivicIssueImage } from '../services/liveFirebase';
 import { uploadImageToCloudinary } from '../services/cloudinary';
 
 const tokenizeAndNormalize = (text) => {
@@ -37,11 +37,27 @@ const SubmissionForm = ({ userLocation, onComplete, isDarkMode }) => {
   const fileInputRef = useRef(null);
   const cameraInputRef = useRef(null);
 
-  const handleFileChange = (e) => {
+  const handleFileChange = async (e) => {
     const selectedFile = e.target.files[0];
     if (selectedFile) {
-      setFile(selectedFile);
-      setPhotoUrl(URL.createObjectURL(selectedFile));
+      setProcessing(true);
+      setError(null);
+      try {
+        const validation = await validateCivicIssueImage(selectedFile);
+        if (!validation.isValidCivicIssue) {
+          setError(`INVALID ASSET // THIS PICTURE DOES NOT REPRESENT A CIVIC HAZARD. (${validation.reason})`);
+          clearImage();
+          setProcessing(false);
+          return;
+        }
+        setFile(selectedFile);
+        setPhotoUrl(URL.createObjectURL(selectedFile));
+      } catch (err) {
+        console.error("Image validation failed:", err);
+        setError("Failed to validate image. Please try again.");
+      } finally {
+        setProcessing(false);
+      }
     }
   };
 

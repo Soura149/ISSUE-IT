@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { getIssue, upvoteIssue, calculateDistance, getSessionId, submitResolutionProof, vouchForResolution, deleteIssue, checkHasVouched } from '../services/liveFirebase';
+import { getIssue, upvoteIssue, downvoteIssue, calculateDistance, getSessionId, submitResolutionProof, vouchForResolution, deleteIssue, checkHasVouched, verifyResolutionImage, checkHasUpvoted, checkHasDownvoted } from '../services/liveFirebase';
 import { uploadImageToCloudinary } from '../services/cloudinary';
 import { generateImpactCard } from './CanvasRenderer';
-import { AlertTriangle, MapPin, Share2, Copy, ThumbsUp, ArrowLeft, Mail, MessageSquare, ChevronDown, ChevronUp } from 'lucide-react';
+import { AlertTriangle, MapPin, Share2, Copy, ThumbsUp, Flag, ArrowLeft, Mail, MessageSquare, ChevronDown, ChevronUp } from 'lucide-react';
 import { getSeverityStyles } from '../utils/theme';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../services/firebaseConfig';
@@ -14,6 +14,7 @@ const IssueDetail = ({ issueId, userLocation, onBack, isDarkMode, session }) => 
   const [userProfile, setUserProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [upvoting, setUpvoting] = useState(false);
+  const [downvoting, setDownvoting] = useState(false);
   const [error, setError] = useState('');
   const [distance, setDistance] = useState(null);
   const [cardImage, setCardImage] = useState(null);
@@ -29,6 +30,8 @@ const IssueDetail = ({ issueId, userLocation, onBack, isDarkMode, session }) => 
   const [modalImageSrc, setModalImageSrc] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [hasVouched, setHasVouched] = useState(false);
+  const [hasUpvoted, setHasUpvoted] = useState(false);
+  const [hasDownvoted, setHasDownvoted] = useState(false);
 
   const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL;
   const isAdmin = session?.email && session.email === ADMIN_EMAIL;
@@ -61,6 +64,10 @@ const IssueDetail = ({ issueId, userLocation, onBack, isDarkMode, session }) => 
       setIssue(data);
       const vouchedStatus = await checkHasVouched(issueId);
       setHasVouched(vouchedStatus);
+      const upvotedStatus = await checkHasUpvoted(issueId);
+      setHasUpvoted(upvotedStatus);
+      const downvotedStatus = await checkHasDownvoted(issueId);
+      setHasDownvoted(downvotedStatus);
       if (data && userLocation) {
         const dist = calculateDistance(
           userLocation.latitude,
@@ -82,10 +89,28 @@ const IssueDetail = ({ issueId, userLocation, onBack, isDarkMode, session }) => 
     try {
       const updatedIssue = await upvoteIssue(issueId, userLocation.latitude, userLocation.longitude);
       setIssue(updatedIssue);
+      setHasUpvoted(updatedIssue.hasUpvotedNow);
+      setHasDownvoted(updatedIssue.hasDownvotedNow);
     } catch (err) {
       setError(err.message);
     } finally {
       setUpvoting(false);
+    }
+  };
+
+  const handleDownvote = async () => {
+    if (!userLocation) return;
+    setDownvoting(true);
+    setError('');
+    try {
+      const updatedIssue = await downvoteIssue(issueId, userLocation.latitude, userLocation.longitude);
+      setIssue(updatedIssue);
+      setHasUpvoted(updatedIssue.hasUpvotedNow);
+      setHasDownvoted(updatedIssue.hasDownvotedNow);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setDownvoting(false);
     }
   };
 
@@ -96,6 +121,13 @@ const IssueDetail = ({ issueId, userLocation, onBack, isDarkMode, session }) => 
     setUploadingProof(true);
     setError('');
     try {
+      const validation = await verifyResolutionImage(issue.photo_url, file);
+      if (!validation.isSuccessfullyResolved) {
+        setError(`RESOLUTION REJECTED // ${validation.verificationDetails.toUpperCase()}`);
+        setUploadingProof(false);
+        return;
+      }
+
       const imageUrl = await uploadImageToCloudinary(file);
       setUploadingProof(false);
       setCvSimulating(true);
@@ -113,7 +145,8 @@ const IssueDetail = ({ issueId, userLocation, onBack, isDarkMode, session }) => 
       }, 1500);
 
     } catch (err) {
-      setError(err.message);
+      console.error("Resolution verification failed:", err);
+      setError("Failed to verify resolution image. Please try again.");
       setUploadingProof(false);
     }
   };
@@ -236,13 +269,18 @@ Contact/Email: ${contact}`;
           <ArrowLeft size={20} strokeWidth={3} /> BACK
         </button>
         {isAdmin && (
-          <button
-            onClick={handleDelete}
-            disabled={isDeleting}
-            className={`border-4 px-4 py-2 font-black uppercase flex items-center gap-2 transition-all bg-[#FF0055] text-white ${isDarkMode ? 'border-white shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] hover:shadow-[8px_8px_0px_0px_rgba(255,255,255,1)]' : 'border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]'} hover:-translate-x-1 hover:-translate-y-1 disabled:opacity-50`}
-          >
-            {isDeleting ? 'DELETING...' : 'DELETE (ADMIN)'}
-          </button>
+          <div className="flex flex-col items-end gap-1">
+            <button
+              onClick={handleDelete}
+              disabled={isDeleting}
+              className={`border-4 px-4 py-2 font-black uppercase flex items-center gap-2 transition-all bg-[#FF0055] text-white ${isDarkMode ? 'border-white shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] hover:shadow-[8px_8px_0px_0px_rgba(255,255,255,1)]' : 'border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]'} hover:-translate-x-1 hover:-translate-y-1 disabled:opacity-50`}
+            >
+              {isDeleting ? 'DELETING...' : 'DELETE (ADMIN)'}
+            </button>
+            <span className={`text-[10px] max-w-xs text-right font-mono font-bold mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+              Admin Spam Penalty: Deleting an issue will actively revoke the +20 XP creation bonus from the author.
+            </span>
+          </div>
         )}
       </div>
       <div className={`border-4 p-4 md:p-8 flex flex-col gap-6 ${isDarkMode ? 'border-white shadow-[6px_6px_0px_0px_rgba(255,255,255,1)] bg-zinc-900' : 'border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] bg-white'}`}>
@@ -308,16 +346,27 @@ Contact/Email: ${contact}`;
           </div>
 
           {!isEscalated && !isSolved && !isUnderProcess && (
-            <div className="relative group w-full md:w-auto">
+            <div className="flex flex-col md:flex-row gap-4 w-full md:w-auto relative group">
               <button
                 onClick={handleUpvote}
-                disabled={isTooFar || upvoting || isPoster}
-                className={`w-full md:w-auto justify-center border-4 px-4 py-2 font-black uppercase flex items-center gap-2 transition-all duration-150 disabled:opacity-50 disabled:hover:translate-x-0 disabled:hover:translate-y-0 active:translate-y-0.5 active:translate-x-0.5 ${isDarkMode ? 'border-white bg-white text-black shadow-[6px_6px_0px_0px_rgba(255,255,255,1)] hover:-translate-x-1 hover:-translate-y-1 hover:shadow-[8px_8px_0px_0px_rgba(255,255,255,1)] disabled:hover:shadow-[6px_6px_0px_0px_rgba(255,255,255,1)] hover:bg-zinc-900 hover:text-white' : 'border-black bg-black text-white shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:-translate-x-1 hover:-translate-y-1 hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] disabled:hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]'}`}
+                disabled={isTooFar || upvoting || isPoster || downvoting}
+                className={`flex-1 md:w-auto justify-center border-4 px-4 py-2 font-black uppercase flex items-center gap-2 transition-all duration-150 disabled:opacity-50 disabled:hover:translate-x-0 disabled:hover:translate-y-0 active:translate-y-0.5 active:translate-x-0.5 ${hasUpvoted ? 'border-black bg-[#FF3366] text-white shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:-translate-x-1 hover:-translate-y-1 hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]' : (isDarkMode ? 'border-white bg-white text-black shadow-[6px_6px_0px_0px_rgba(255,255,255,1)] hover:-translate-x-1 hover:-translate-y-1 hover:shadow-[8px_8px_0px_0px_rgba(255,255,255,1)] disabled:hover:shadow-[6px_6px_0px_0px_rgba(255,255,255,1)] hover:bg-zinc-900 hover:text-white' : 'border-black bg-black text-white shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:-translate-x-1 hover:-translate-y-1 hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] disabled:hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]')}`}
                 title={isPoster ? "You cannot co-sign your own issue." : isTooFar ? "You must be physically present near this issue to co-sign it." : ""}
               >
                 <ThumbsUp size={20} strokeWidth={3} />
-                I'M AFFECTED
+                {upvoting ? 'PROCESSING...' : hasUpvoted ? 'REMOVE UPVOTE' : "I'M AFFECTED"}
               </button>
+
+              <button
+                onClick={handleDownvote}
+                disabled={isTooFar || downvoting || isPoster || upvoting}
+                className={`flex-1 md:w-auto justify-center border-4 px-4 py-2 font-black uppercase flex items-center gap-2 transition-all duration-150 disabled:opacity-50 disabled:hover:translate-x-0 disabled:hover:translate-y-0 active:translate-y-0.5 active:translate-x-0.5 ${hasDownvoted ? 'border-black bg-[#FF3366] text-white shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:-translate-x-1 hover:-translate-y-1 hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]' : (isDarkMode ? 'border-white bg-zinc-900 text-white shadow-[6px_6px_0px_0px_rgba(255,255,255,1)] hover:-translate-x-1 hover:-translate-y-1 hover:shadow-[8px_8px_0px_0px_rgba(255,255,255,1)] disabled:hover:shadow-[6px_6px_0px_0px_rgba(255,255,255,1)] hover:bg-white hover:text-black' : 'border-black bg-gray-100 text-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:-translate-x-1 hover:-translate-y-1 hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] disabled:hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:bg-black hover:text-white')}`}
+                title={isPoster ? "You cannot flag your own issue." : isTooFar ? "You must be physically present near this issue to flag it." : ""}
+              >
+                <Flag size={20} strokeWidth={3} />
+                {downvoting ? 'PROCESSING...' : hasDownvoted ? 'REMOVE FLAG' : "FLAG AS FAKE"}
+              </button>
+
               {isTooFar && !isPoster && (
                 <p className={`font-mono text-xs md:text-sm mt-2 text-center font-bold border-2 absolute w-full -bottom-8 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 ${isDarkMode ? 'border-white bg-zinc-900 text-white' : 'border-black bg-white text-black'}`}>
                   TOO FAR (&lt; 500KM)
