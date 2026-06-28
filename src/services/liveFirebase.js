@@ -8,10 +8,10 @@ export const getSessionId = () => {
   if (auth.currentUser) {
     return auth.currentUser.uid;
   }
-  let sessionId = localStorage.getItem('civic_session_id');
+  let sessionId = localStorage.getItem('issueit_session_id');
   if (!sessionId) {
     sessionId = 'session_' + Math.random().toString(36).substr(2, 9);
-    localStorage.setItem('civic_session_id', sessionId);
+    localStorage.setItem('issueit_session_id', sessionId);
   }
   return sessionId;
 };

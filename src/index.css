@@ -4,7 +4,7 @@
 
 @layer base {
   body {
-    @apply bg-white text-black font-sans antialiased;
+    @apply bg-white text-black font-sans antialiased overflow-x-hidden;
   }
 }
 
@@ -30,4 +30,25 @@
 }
 .animate-marquee {
   animation: marquee 15s linear infinite;
+}
+
+/* Neo-Brutalist Scrollbar */
+.brutal-scrollbar::-webkit-scrollbar {
+  width: 16px;
+}
+.brutal-scrollbar::-webkit-scrollbar-track {
+  background: white;
+  border-left: 4px solid black;
+}
+.dark .brutal-scrollbar::-webkit-scrollbar-track {
+  background: #18181b; /* zinc-900 */
+  border-left: 4px solid white;
+}
+.brutal-scrollbar::-webkit-scrollbar-thumb {
+  background: black;
+  border: 2px solid white;
+}
+.dark .brutal-scrollbar::-webkit-scrollbar-thumb {
+  background: white;
+  border: 2px solid #18181b;
 }

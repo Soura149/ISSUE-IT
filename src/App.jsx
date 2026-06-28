@@ -137,7 +137,7 @@ function App() {
 
   return (
     <div className={isDarkMode ? 'dark' : ''}>
-      <div className={`w-full min-h-screen px-2 sm:px-4 md:px-8 box-border overflow-x-hidden ${isDarkMode ? 'bg-black text-white' : 'bg-white text-black'} font-sans transition-colors duration-300`}>
+      <div className={`w-full min-h-screen px-2 sm:px-4 md:px-8 box-border ${isDarkMode ? 'bg-black text-white' : 'bg-white text-black'} font-sans transition-colors duration-300`}>
       {/* Sidebar Backdrop Overlay */}
       {isSidebarOpen && (
         <div 
@@ -197,23 +197,25 @@ function App() {
 
         {/* Locked Footer */}
         <div>
-          <div className="flex items-center gap-3 p-4 border-t-2 border-black dark:border-white bg-neutral-100 dark:bg-neutral-900">
-            {session.photoURL ? (
-              <img 
-                src={session.photoURL} 
-                className="w-10 h-10 border-2 border-black dark:border-white object-cover" 
-                alt="Profile"
-              />
-            ) : (
-              <div className="w-10 h-10 bg-black text-white dark:bg-white dark:text-black flex items-center justify-center font-bold font-mono border-2 border-black dark:border-white">
-                {session.email ? session.email.substring(0,2).toUpperCase() : 'US'}
+          {currentPath !== '/profile' && (
+            <div className="flex items-center gap-3 p-4 border-t-2 border-black dark:border-white bg-neutral-100 dark:bg-neutral-900">
+              {session.photoURL ? (
+                <img 
+                  src={session.photoURL} 
+                  className="w-10 h-10 border-2 border-black dark:border-white object-cover" 
+                  alt="Profile"
+                />
+              ) : (
+                <div className="w-10 h-10 bg-black text-white dark:bg-white dark:text-black flex items-center justify-center font-bold font-mono border-2 border-black dark:border-white">
+                  {session.email ? session.email.substring(0,2).toUpperCase() : 'US'}
+                </div>
+              )}
+              <div className="flex flex-col min-w-0">
+                <span className="font-mono font-black text-sm uppercase tracking-tight text-black dark:text-white truncate">{session.displayName || 'Anonymous'}</span>
+                <span className="font-mono text-[10px] text-gray-500 dark:text-gray-400 truncate">{session.email}</span>
               </div>
-            )}
-            <div className="flex flex-col min-w-0">
-              <span className="font-mono font-black text-sm uppercase tracking-tight text-black dark:text-white truncate">{session.displayName || 'Anonymous'}</span>
-              <span className="font-mono text-[10px] text-gray-500 dark:text-gray-400 truncate">{session.email}</span>
             </div>
-          </div>
+          )}
           <button 
             onClick={() => {
               setIsSidebarOpen(false);
@@ -237,13 +239,13 @@ function App() {
             <Menu strokeWidth={3} />
           </button>
           <div className={`text-xl sm:text-2xl md:text-3xl font-black uppercase tracking-tight flex items-center gap-2 ${isDarkMode ? 'text-white' : 'text-black'}`}>
-            <span className={isDarkMode ? 'text-white text-3xl' : 'text-black text-3xl'}></span> CIVICPULSE
+            <span className={isDarkMode ? 'text-white text-3xl' : 'text-black text-3xl'}></span> ISSUE IT
           </div>
         </div>
       </nav>
 
       {/* Main Content Area */}
-      <main className="w-full max-w-6xl mx-auto py-4 md:py-6 grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-8 items-start box-border">
+      <main className="w-full max-w-7xl mx-auto py-4 md:py-6 grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-8 items-start box-border">
         {/* Left/Center Column - Active Feed */}
         <div className="lg:col-span-2 w-full">
           {view === 'feed' && (
@@ -285,7 +287,7 @@ function App() {
         </div>
 
         {/* Right Column - Brutalist Info Widget */}
-        <div className="hidden lg:block lg:col-span-1 sticky top-24 flex flex-col gap-6">
+        <div className="lg:col-span-1 flex flex-col gap-6 w-full lg:sticky lg:top-24">
           <div className={`border-4 rounded-3xl p-6 font-mono flex flex-col gap-4 relative transition-all duration-300 ${isDarkMode ? 'border-white bg-zinc-900 shadow-[6px_6px_0px_0px_rgba(255,255,255,1)]' : 'border-black bg-white shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]'}`}>
             
             {/* Removed Geometric Sticker Accent */}

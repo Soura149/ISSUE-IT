@@ -72,7 +72,7 @@ export const generateImpactCard = (issue) => {
       // Footer CTA
       ctx.fillStyle = '#EF4444';
       ctx.font = 'bold 24px Inter, sans-serif';
-      ctx.fillText('Powered by CivicPulse', 60, canvas.height - 40);
+      ctx.fillText('Powered by ISSUE IT', 60, canvas.height - 40);
 
       // Convert to image data URL
       const dataUrl = canvas.toDataURL('image/png');

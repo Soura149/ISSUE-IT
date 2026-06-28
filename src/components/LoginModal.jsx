@@ -20,7 +20,7 @@ const LoginModal = ({ onSignIn, onClose }) => {
             AUTHENTICATE
           </h2>
           <p className="font-mono text-sm uppercase text-gray-600 dark:text-gray-400">
-            Secure entry to the CivicPulse network.
+            Secure entry to the ISSUE IT network.
           </p>
         </div>
 

@@ -128,7 +128,7 @@ const LocationFeed = ({ userLocation, onSelectIssue, isDarkMode }) => {
                   </div>
                   <p className={`font-mono text-xs font-bold uppercase mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-800'}`}> {issue.location_name}</p>
                   <h3 className={`text-lg sm:text-xl font-black uppercase tracking-tight line-clamp-1 ${issue.status === 'SOLVED' ? 'line-through' : ''} ${isDarkMode ? 'text-white' : 'text-black'}`}>{issue.category} Report</h3>
-                  <p className={`font-mono text-sm mt-2 line-clamp-2 ${issue.status === 'SOLVED' ? 'line-through' : ''} ${isDarkMode ? 'text-gray-200' : 'text-black'}`}>{issue.description || issue.ai_description}</p>
+                  <p className={`font-mono text-sm mt-2 line-clamp-3 text-ellipsis ${issue.status === 'SOLVED' ? 'line-through' : ''} ${isDarkMode ? 'text-gray-200' : 'text-black'}`}>{issue.description || issue.ai_description}</p>
                   
                   <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mt-3 sm:mt-4">
                     <span className={`font-mono text-[10px] font-bold uppercase border-2 px-2 py-0.5 flex items-center gap-1 ${isDarkMode ? 'border-white bg-zinc-900 text-white' : 'border-black bg-white text-black'}`}>
@@ -191,7 +191,7 @@ const LocationFeed = ({ userLocation, onSelectIssue, isDarkMode }) => {
 
                 {/* Bottom text content section */}
                 <div className="p-4 flex flex-col space-y-2">
-                  <p className={`font-mono text-sm line-clamp-2 ${issue.status === 'SOLVED' ? 'line-through' : ''} ${isDarkMode ? 'text-gray-200' : 'text-black'}`}>{issue.description || issue.ai_description}</p>
+                  <p className={`font-mono text-sm line-clamp-3 text-ellipsis ${issue.status === 'SOLVED' ? 'line-through' : ''} ${isDarkMode ? 'text-gray-200' : 'text-black'}`}>{issue.description || issue.ai_description}</p>
                   <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mt-3 sm:mt-4">
                     <span className={`font-mono text-[10px] font-bold uppercase border-2 px-2 py-0.5 ${isDarkMode ? 'border-white bg-zinc-900 text-white' : 'border-black bg-white text-black'}`}>
                       UPVOTES: {issue.upvote_count}

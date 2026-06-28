@@ -13,9 +13,9 @@ const LandingPage = ({ onLogin, isDarkMode, setIsDarkMode }) => {
         {/* Navbar */}
         <nav className="w-full max-w-7xl flex justify-between items-center z-30 relative mb-24">
           <div className="text-2xl font-black uppercase tracking-tighter flex flex-col leading-none cursor-pointer">
-            <span>CIVIC</span>
+            <span>ISSUE</span>
             <span className="border-2 border-black dark:border-white px-1 inline-block w-max text-sm bg-black text-white dark:bg-white dark:text-black mt-1">
-              PULSE
+              IT
             </span>
           </div>
           <div className="flex items-center gap-6 font-mono font-bold text-xs uppercase">
@@ -41,23 +41,16 @@ const LandingPage = ({ onLogin, isDarkMode, setIsDarkMode }) => {
           className="text-center relative z-20 max-w-5xl mx-auto flex flex-col items-center gap-6"
         >
           <h1 className="text-5xl md:text-7xl lg:text-8xl font-black tracking-tighter uppercase leading-[1.1] relative">
-            Where 
+            WELCOME TO
             <span className="bg-[#FFCC00] text-black px-4 py-1 mx-4 inline-flex items-center justify-center rounded-full border-4 border-black rotate-[-2deg] shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:rotate-0 transition-transform cursor-default">
-              CIVIC
+              ISSUE IT
             </span> 
-            Problems
             <br />
-            Get Resolved
-            
-            {/* SVG Starburst Accent */}
-            <svg className="absolute -right-12 bottom-0 w-12 h-12 text-[#FFCC00] animate-[spin_10s_linear_infinite]" viewBox="0 0 100 100" fill="currentColor" stroke="black" strokeWidth="4">
-              <path d="M50 0 L58 35 L95 20 L70 50 L95 80 L58 65 L50 100 L42 65 L5 80 L30 50 L5 20 L42 35 Z" />
-            </svg>
           </h1>
           
           <p className="font-mono font-bold text-sm md:text-base max-w-2xl mt-4 relative z-10">
-            Welcome to the Next-Gen Crowd-Intelligence Utility for your city.
-            Report hazards, verify repairs, and power the Civic Impact Engine.
+            The Crowd-Intelligence Utility Platform for your city.
+            Report hazards, verify repairs, and power the ISSUE IT Engine.
           </p>
 
           <button 
@@ -67,12 +60,7 @@ const LandingPage = ({ onLogin, isDarkMode, setIsDarkMode }) => {
             Apply Now ↗
           </button>
           
-          {/* Overlapping Avatar Cluster */}
-          <div className="absolute top-0 right-0 lg:-right-24 hidden md:flex items-center z-30 translate-y-4">
-            <motion.img initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ ...springConfig, delay: 0 }} src="https://ui-avatars.com/api/?name=Alice&background=FFCC00&color=000&bold=true" alt="User 1" className="w-16 h-16 rounded-full border-4 border-black relative z-30 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]" />
-            <motion.img initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ ...springConfig, delay: 0.1 }} src="https://ui-avatars.com/api/?name=Bob&background=00FF66&color=000&bold=true" alt="User 2" className="w-16 h-16 rounded-full border-4 border-black relative z-20 -ml-6 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]" />
-            <motion.img initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ ...springConfig, delay: 0.2 }} src="https://ui-avatars.com/api/?name=Charlie&background=fff&color=000&bold=true" alt="User 3" className="w-16 h-16 rounded-full border-4 border-black relative z-10 -ml-6 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]" />
-          </div>
+
         </motion.div>
       </section>
 
@@ -117,9 +105,8 @@ const LandingPage = ({ onLogin, isDarkMode, setIsDarkMode }) => {
             </h2>
             <p className="font-mono font-bold text-sm md:text-base leading-relaxed text-center text-black dark:text-white">
               Simply put, this high-performance platform is for anyone actively engaged in 
-              the maintenance of their local environment. Whether you are a 
-              daily commuter, a local business owner, or a civic leader, 
-              this Secure Real-Time Infrastructure empowers you to take action.
+              daily commuter, a local business owner, or a community leader, 
+              the ISSUE IT platform empowers you to take action.
             </p>
           </div>
         </motion.div>
@@ -185,7 +172,7 @@ const LandingPage = ({ onLogin, isDarkMode, setIsDarkMode }) => {
             
             {/* Top Bar */}
             <div className="border-b-4 border-black dark:border-white pb-4 mb-4 flex justify-between items-center">
-              <div className="font-black uppercase">CivicPulse Dashboard</div>
+              <div className="font-black uppercase">ISSUE IT Dashboard</div>
               <div className="flex gap-2">
                 <div className="w-3 h-3 bg-red-500 rounded-full border-2 border-black"></div>
                 <div className="w-3 h-3 bg-[#FFCC00] rounded-full border-2 border-black"></div>
@@ -282,7 +269,7 @@ const LandingPage = ({ onLogin, isDarkMode, setIsDarkMode }) => {
               className="self-center w-[90%] md:w-[80%] bg-[#FFCC00] dark:bg-yellow-900 border-4 border-black dark:border-white p-6 md:p-8 rounded-3xl relative shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] dark:shadow-[8px_8px_0px_0px_rgba(255,255,255,1)] hover:-translate-y-1 transition-all text-black dark:text-white"
             >
               <div className="absolute -top-4 -right-4 bg-blue-400 border-4 border-black px-3 py-1 font-black text-black rounded-full rotate-[-5deg]">
-                Be Civic.
+                Issue It.
               </div>
               <h3 className="font-black uppercase text-2xl mb-2">Verify Responsibly</h3>
               <p className="font-mono text-sm md:text-base font-bold">
@@ -296,7 +283,7 @@ const LandingPage = ({ onLogin, isDarkMode, setIsDarkMode }) => {
 
       {/* --- Footer --- */}
       <footer className="w-full py-12 px-6 border-t-8 border-black dark:border-white bg-black text-white dark:bg-white dark:text-black flex flex-col md:flex-row justify-between items-center font-mono font-bold text-xs uppercase gap-6">
-        <div>© 2026 CIVICPULSE PROTOCOL</div>
+        <div>© 2026 ISSUE IT PROTOCOL</div>
         <div className="flex gap-4">
           <a href="#" className="hover:underline transition-all">GitHub</a>
           <a href="#" className="hover:underline transition-all">Docs</a>

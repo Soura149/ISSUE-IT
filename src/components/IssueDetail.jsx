@@ -102,7 +102,7 @@ const IssueDetail = ({ issueId, userLocation, onBack, isDarkMode }) => {
 
       // Convert data URL to Blob for Web Share API
       const blob = await (await fetch(dataUrl)).blob();
-      const file = new File([blob], 'civicpulse-escalation.png', { type: 'image/png' });
+      const file = new File([blob], 'issueit-escalation.png', { type: 'image/png' });
 
       if (navigator.canShare && navigator.canShare({ files: [file] })) {
         await navigator.share({
@@ -114,7 +114,7 @@ const IssueDetail = ({ issueId, userLocation, onBack, isDarkMode }) => {
         // Fallback desktop download
         const a = document.createElement('a');
         a.href = dataUrl;
-        a.download = 'civicpulse-escalation.png';
+        a.download = 'issueit-escalation.png';
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);

@@ -193,7 +193,7 @@ const Profile = ({ session, viewedUserId, isDarkMode, onSelectIssue }) => {
       </div>
 
       {/* Content */}
-      <div className="w-full px-2 mx-auto">
+      <div className={`w-full px-2 mx-auto h-[55vh] min-h-[400px] overflow-y-auto brutal-scrollbar ${isDarkMode ? 'border-white' : 'border-black'}`}>
         {loading ? (
           <div className="flex justify-center py-10">
             <div className={`spinner ${isDarkMode ? 'border-white' : 'border-black'}`}></div>

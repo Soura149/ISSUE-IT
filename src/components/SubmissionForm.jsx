@@ -270,12 +270,12 @@ const SubmissionForm = ({ userLocation, onComplete, isDarkMode }) => {
 
         <div className="flex flex-col gap-2">
           <label className="font-black uppercase text-xl">Severity</label>
-          <div className="flex flex-wrap gap-4 mt-2">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mt-2">
             {['low', 'medium', 'high', 'critical'].map(sev => (
               <button
                 key={sev}
                 type="button"
-                className={`flex-1 min-w-[80px] border-4 p-2 font-black uppercase transition-all ${
+                className={`w-full border-4 py-3 px-1 sm:px-2 font-black uppercase text-xs sm:text-sm tracking-tight transition-all flex items-center justify-center ${
                   formData.severity === sev 
                     ? (isDarkMode ? 'bg-white text-black border-white translate-x-[4px] translate-y-[4px]' : 'bg-black text-white border-black translate-x-[4px] translate-y-[4px]') 
                     : (isDarkMode ? 'bg-zinc-900 text-white border-white shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] hover:-translate-x-1 hover:-translate-y-1 hover:shadow-[8px_8px_0px_0px_rgba(255,255,255,1)]' : 'bg-white text-black border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:-translate-x-1 hover:-translate-y-1 hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]')
