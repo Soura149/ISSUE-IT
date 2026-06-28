@@ -3,11 +3,26 @@ import { Upload, Camera, Send } from 'lucide-react';
 import { classifyUploadedImage, createIssue, getIssues, calculateDistance } from '../services/liveFirebase';
 import { uploadImageToCloudinary } from '../services/cloudinary';
 
+const tokenizeAndNormalize = (text) => {
+  if (!text) return [];
+  return text.toLowerCase()
+    .replace(/[^\w\s]/gi, '')
+    .split(/\s+/)
+    .filter(word => word.length > 3 && !['this', 'that', 'with', 'from', 'have', 'near', 'some', 'there', 'been', 'they'].includes(word));
+};
+
+const hasKeywordOverlap = (text1, text2) => {
+  const tokens1 = tokenizeAndNormalize(text1);
+  const tokens2 = tokenizeAndNormalize(text2);
+  return tokens1.some(token => tokens2.includes(token));
+};
+
 const SubmissionForm = ({ userLocation, onComplete, isDarkMode }) => {
   const [file, setFile] = useState(null);
   const [photoUrl, setPhotoUrl] = useState(null);
   const [processing, setProcessing] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [duplicateThreat, setDuplicateThreat] = useState(null);
   const [formData, setFormData] = useState({
     locationName: '',
     category: '',
@@ -18,26 +33,35 @@ const SubmissionForm = ({ userLocation, onComplete, isDarkMode }) => {
   const fileInputRef = useRef(null);
   const cameraInputRef = useRef(null);
 
-  const handleFileChange = async (e) => {
+  const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
     if (selectedFile) {
       setFile(selectedFile);
       setPhotoUrl(URL.createObjectURL(selectedFile));
-      
-      // Simulate Phase 2: AI Classification
-      setProcessing(true);
-      try {
-        const aiResponse = await classifyUploadedImage(selectedFile);
-        setFormData({
-          category: aiResponse.category,
-          severity: aiResponse.severity,
-          description: aiResponse.auto_description
-        });
-      } catch (error) {
-        console.error("AI classification failed", error);
-      } finally {
-        setProcessing(false);
-      }
+    }
+  };
+
+  const clearImage = () => {
+    setFile(null);
+    setPhotoUrl(null);
+  };
+
+  const handleScanImage = async () => {
+    if (!file) return;
+    setProcessing(true);
+    try {
+      const aiResponse = await classifyUploadedImage(file);
+      setFormData(prev => ({
+        ...prev,
+        category: aiResponse.category || prev.category,
+        severity: aiResponse.severity || prev.severity,
+        description: aiResponse.auto_description || prev.description
+      }));
+    } catch (error) {
+      console.error("AI classification failed", error);
+      alert("AI scan failed. Please fill manually.");
+    } finally {
+      setProcessing(false);
     }
   };
 
@@ -50,20 +74,31 @@ const SubmissionForm = ({ userLocation, onComplete, isDarkMode }) => {
     setSubmitting(true);
     try {
       // Deduplication Check
+      const DRIFT_RADIUS_THRESHOLD_METERS = 100;
       const existingIssues = await getIssues();
       const duplicate = existingIssues.find(issue => {
         if (issue.category !== (formData.category || 'other')) return false;
+        
         const dist = calculateDistance(
           userLocation.latitude, 
           userLocation.longitude, 
           issue.latitude, 
           issue.longitude
         );
-        return dist <= 10;
+        
+        if (dist <= DRIFT_RADIUS_THRESHOLD_METERS) {
+           const locOverlap = hasKeywordOverlap(formData.locationName, issue.location_name || issue.locationName);
+           const descOverlap = hasKeywordOverlap(formData.description, issue.description || issue.ai_description);
+           
+           if (locOverlap && descOverlap) {
+              return true;
+           }
+        }
+        return false;
       });
 
       if (duplicate) {
-        alert("This issue has already been reported at this exact location!");
+        setDuplicateThreat(duplicate);
         setSubmitting(false);
         return;
       }
@@ -93,7 +128,39 @@ const SubmissionForm = ({ userLocation, onComplete, isDarkMode }) => {
   };
 
   return (
-    <div className={`flex flex-col gap-6 ${isDarkMode ? 'text-white' : 'text-black'}`}>
+    <div className={`flex flex-col gap-6 relative ${isDarkMode ? 'text-white' : 'text-black'}`}>
+      
+      {duplicateThreat && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+          <div className="border-4 border-black bg-yellow-300 text-black p-4 font-mono font-bold shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:border-white max-w-md w-full relative">
+            <h2 className="text-2xl font-black uppercase mb-3">⚠️ DUPLICATE THREAT DETECTED</h2>
+            <p className="mb-6 text-sm">
+              A similar issue in this category has already been reported nearby at [{duplicateThreat.location_name || duplicateThreat.locationName}]. 
+              Please review the active feed or upvote the existing report to escalate it.
+            </p>
+            <div className="flex gap-4">
+              <button 
+                type="button"
+                className="flex-1 border-4 border-black bg-white p-2 uppercase hover:-translate-x-1 hover:-translate-y-1 hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all"
+                onClick={() => setDuplicateThreat(null)}
+              >
+                Dismiss
+              </button>
+              <button 
+                type="button"
+                className="flex-1 border-4 border-black bg-black text-white p-2 uppercase hover:-translate-x-1 hover:-translate-y-1 hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all"
+                onClick={() => {
+                  setDuplicateThreat(null);
+                  onComplete();
+                }}
+              >
+                View Feed
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className={`border-b-4 pb-4 ${isDarkMode ? 'border-white' : 'border-black'}`}>
         <h1 className="text-4xl font-black uppercase tracking-tight leading-none">Report Issue</h1>
         <p className="font-mono font-bold uppercase mt-2">Capture and submit a civic hazard</p>
@@ -101,18 +168,37 @@ const SubmissionForm = ({ userLocation, onComplete, isDarkMode }) => {
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-6">
         {/* Multimodal Input Layout */}
-        <div className={`relative overflow-hidden border-4 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] flex flex-col items-center justify-center p-8 min-h-[250px] ${isDarkMode ? 'border-white bg-zinc-900 shadow-[8px_8px_0px_0px_rgba(255,255,255,1)]' : 'border-black bg-white shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]'}`}>
+        <div className={`relative border-4 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] flex flex-col items-center justify-center p-8 min-h-[250px] ${isDarkMode ? 'border-white bg-zinc-900 shadow-[8px_8px_0px_0px_rgba(255,255,255,1)]' : 'border-black bg-white shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]'}`}>
           {(processing || submitting) && (
-            <div className={`absolute inset-0 z-10 flex flex-col items-center justify-center border-4 m-2 ${isDarkMode ? 'bg-zinc-900/90 border-white' : 'bg-white/90 border-black'}`}>
+            <div className={`absolute inset-0 z-20 flex flex-col items-center justify-center border-4 m-2 ${isDarkMode ? 'bg-zinc-900/90 border-white' : 'bg-white/90 border-black'}`}>
               <div className={`spinner mb-4 ${isDarkMode ? 'border-white' : 'border-black'}`}></div>
               <p className="font-black uppercase text-xl text-center px-4">{processing ? "AI Analysis in Progress..." : "Publishing Issue..."}</p>
             </div>
           )}
 
           {photoUrl ? (
-            <img src={photoUrl} alt="Preview" className="absolute inset-0 w-full h-full object-cover" />
+            <div className="flex flex-col items-center gap-6 w-full z-10">
+              <img src={photoUrl} alt="Preview" className="w-full max-h-[600px] object-contain border-4 border-black dark:border-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]" />
+              <div className="flex flex-wrap gap-4 w-full">
+                <button 
+                  type="button"
+                  className={`flex-1 border-4 px-4 py-3 font-black uppercase transition-all flex items-center justify-center gap-2 ${isDarkMode ? 'border-white bg-zinc-800 text-white hover:bg-zinc-700' : 'border-black bg-gray-100 text-black hover:bg-gray-200'}`}
+                  onClick={clearImage}
+                >
+                  Change Image
+                </button>
+                <button 
+                  type="button"
+                  className={`flex-1 border-4 px-4 py-3 font-black uppercase transition-all flex items-center justify-center gap-2 ${isDarkMode ? 'border-white bg-white text-black shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] hover:-translate-x-1 hover:-translate-y-1 hover:shadow-[8px_8px_0px_0px_rgba(255,255,255,1)]' : 'border-black bg-black text-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:-translate-x-1 hover:-translate-y-1 hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]'}`}
+                  onClick={handleScanImage}
+                  disabled={processing}
+                >
+                  Scan with AI
+                </button>
+              </div>
+            </div>
           ) : (
-            <div className="flex flex-col items-center gap-6 z-0">
+            <div className="flex flex-col items-center gap-6 z-10">
               <div className="flex flex-wrap justify-center gap-4">
                 <button 
                   type="button" 

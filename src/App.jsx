@@ -104,62 +104,61 @@ function App() {
               onClick={() => setIsSidebarOpen(false)}
               className={`font-mono font-bold uppercase border-2 px-2 py-1 text-sm transition-colors ${isDarkMode ? 'border-white bg-zinc-900 text-white hover:bg-white hover:text-black' : 'border-black bg-white text-black hover:bg-black hover:text-white'}`}
             >
-              ❌ CLOSE
+              CLOSE
             </button>
           </div>
           
           {/* Navigation Links Group */}
           <div className="flex flex-col">
             <button 
-              onClick={() => setIsDarkMode(!isDarkMode)}
+              onClick={() => navigate('feed')}
               className={`font-mono text-xl text-left font-black p-4 border-b-2 uppercase transition-all cursor-pointer ${isDarkMode ? 'border-white hover:bg-white hover:text-black' : 'border-black hover:bg-black hover:text-white'}`}
             >
-              🌗 TOGGLE THEME
+              FEEDS DASHBOARD
             </button>
             <button 
               onClick={() => navigate('submit')}
               className={`font-mono text-xl text-left font-black p-4 border-b-2 uppercase transition-all cursor-pointer ${isDarkMode ? 'border-white hover:bg-white hover:text-black' : 'border-black hover:bg-black hover:text-white'}`}
             >
-              📝 POST AN ISSUE
-            </button>
-            <button 
-              onClick={() => navigate('profile')}
-              className={`font-mono text-xl text-left font-black p-4 border-b-2 uppercase transition-all cursor-pointer ${isDarkMode ? 'border-white hover:bg-white hover:text-black' : 'border-black hover:bg-black hover:text-white'}`}
-            >
-              👤 PROFILE INFO
+              POST AN ISSUE
             </button>
             <button 
               onClick={() => navigate('leaderboard')}
               className={`font-mono text-xl text-left font-black p-4 border-b-2 uppercase transition-all cursor-pointer ${isDarkMode ? 'border-white hover:bg-white hover:text-black' : 'border-black hover:bg-black hover:text-white'}`}
             >
-              🏆 LEADERBOARD RANKINGS
+              LEADERBOARD RANKINGS
             </button>
             <button 
-              onClick={() => navigate('feed')}
+              onClick={() => navigate('profile')}
               className={`font-mono text-xl text-left font-black p-4 border-b-2 uppercase transition-all cursor-pointer ${isDarkMode ? 'border-white hover:bg-white hover:text-black' : 'border-black hover:bg-black hover:text-white'}`}
             >
-              📰 FEEDS DASHBOARD
+              PROFILE INFO
+            </button>
+            <button 
+              onClick={() => setIsDarkMode(!isDarkMode)}
+              className={`font-mono text-xl text-left font-black p-4 border-b-2 uppercase transition-all cursor-pointer ${isDarkMode ? 'border-white hover:bg-white hover:text-black' : 'border-black hover:bg-black hover:text-white'}`}
+            >
+              TOGGLE THEME
             </button>
           </div>
         </div>
 
         {/* Locked Footer */}
         <div>
-          <div className="p-4 flex items-center gap-3">
+          <div className="flex items-center gap-3 p-4 border-t-2 border-black dark:border-white bg-neutral-100 dark:bg-neutral-900">
             {session.photoURL ? (
               <img 
                 src={session.photoURL} 
-                alt="User Avatar" 
-                className="border-2 border-black w-10 h-10 object-cover rounded-none" 
+                className="w-10 h-10 border-2 border-black dark:border-white object-cover" 
               />
             ) : (
-              <div className="w-10 h-10 bg-black text-white flex items-center justify-center font-bold font-mono">
+              <div className="w-10 h-10 bg-black text-white dark:bg-white dark:text-black flex items-center justify-center font-bold font-mono border-2 border-black dark:border-white">
                 {session.email ? session.email.substring(0,2).toUpperCase() : 'US'}
               </div>
             )}
-            <div className="flex flex-col overflow-hidden">
-              <span className="font-bold text-sm uppercase truncate">{session.displayName || 'Anonymous'}</span>
-              <span className="font-mono text-xs truncate">{session.email}</span>
+            <div className="flex flex-col min-w-0">
+              <span className="font-mono font-black text-sm uppercase tracking-tight text-black dark:text-white truncate">{session.displayName || 'Anonymous'}</span>
+              <span className="font-mono text-[10px] text-gray-500 dark:text-gray-400 truncate">{session.email}</span>
             </div>
           </div>
           <button 
@@ -229,7 +228,7 @@ function App() {
         <div className="hidden lg:block lg:col-span-1 sticky top-24">
           <div className={`border-4 p-4 font-mono flex flex-col gap-4 ${isDarkMode ? 'border-white bg-zinc-900 shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]' : 'border-black bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]'}`}>
             <h2 className={`text-3xl font-black tracking-tighter uppercase border-b-4 pb-2 ${isDarkMode ? 'border-white' : 'border-black'}`}>
-              📊 LIVESTATS
+              LIVESTATS
             </h2>
             <div className="flex flex-col gap-1">
               <span className="font-bold text-sm uppercase">Active Reporting Radius:</span>
