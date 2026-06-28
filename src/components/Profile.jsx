@@ -91,13 +91,12 @@ const Profile = ({ session, viewedUserId, isDarkMode, onSelectIssue }) => {
           <div 
             key={issue.id}
             onClick={() => onSelectIssue(issue.id)}
-            className={`border-4 p-4 cursor-pointer hover:-translate-y-0.5 transition-all ${issue.status === 'SOLVED' ? 'opacity-75' : ''} ${isDarkMode ? 'border-white bg-zinc-900 shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] hover:shadow-[6px_6px_0px_0px_rgba(255,255,255,1)]' : 'border-black bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]'}`}
+            className={`relative border-4 p-4 mt-4 cursor-pointer hover:-translate-x-1 hover:-translate-y-1 active:translate-x-0.5 active:translate-y-0.5 rounded-3xl transition-all duration-150 ${issue.status === 'SOLVED' ? 'opacity-75 grayscale-[0.2]' : ''} ${isDarkMode ? 'border-white bg-black shadow-[6px_6px_0px_0px_rgba(255,255,255,1)]' : 'border-black bg-white shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]'}`}
           >
-            <div className="flex flex-wrap justify-between items-start gap-2 mb-2">
-              <span className={`font-mono text-xs font-black uppercase border-2 px-3 py-1 tracking-tight flex items-center gap-1 max-w-full ${isDarkMode ? 'shadow-[2px_2px_0px_0px_rgba(255,255,255,1)]' : 'shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]'} ${getSeverityStyles(issue.severity)}`}>
-                <AlertTriangle size={12} strokeWidth={3} className="shrink-0" />
-                <span className="truncate">{issue.category}</span>
-              </span>
+            <div className={`absolute -top-3 -left-3 px-3 py-1 rounded-full border-2 border-black rotate-[-2deg] font-mono text-xs font-black uppercase z-10 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] ${getSeverityStyles(issue.severity)}`}>
+              {issue.category}
+            </div>
+            <div className="flex justify-end items-start mb-2">
               <span className={`font-mono border-2 px-2 py-0.5 text-[10px] font-bold uppercase shrink-0 ${isDarkMode ? 'shadow-[2px_2px_0px_0px_rgba(255,255,255,1)] border-white' : 'shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] border-black'} ${issue.status === 'UNDER_PROCESS' ? 'bg-[#FFCC00] text-black' : issue.status === 'SOLVED' ? 'bg-[#00FF66] text-black' : issue.status === 'escalated' ? (isDarkMode ? 'bg-white text-black' : 'bg-black text-white') : (isDarkMode ? 'bg-zinc-900 text-white' : 'bg-white text-black')}`}>
                 {issue.status}
               </span>

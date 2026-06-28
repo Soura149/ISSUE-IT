@@ -19,6 +19,7 @@ function App() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [totalIssuesCount, setTotalIssuesCount] = useState(0);
+  const [resolvedIssuesCount, setResolvedIssuesCount] = useState(0);
   const [showLoginModal, setShowLoginModal] = useState(false);
 
   useEffect(() => {
@@ -54,7 +55,8 @@ function App() {
     const fetchGlobalStats = async () => {
       try {
         const issues = await getIssues();
-        setTotalIssuesCount(issues.length);
+        setTotalIssuesCount(issues.filter(i => i.status !== 'SOLVED').length);
+        setResolvedIssuesCount(issues.filter(i => i.status === 'SOLVED').length);
       } catch (error) {
         console.error("Failed to fetch global stats", error);
       }
@@ -162,31 +164,31 @@ function App() {
           <div className="flex flex-col">
             <button 
               onClick={() => navigateToPage('/feed')}
-              className={`font-mono text-xl text-left font-black p-4 border-b-2 uppercase transition-all cursor-pointer truncate ${isDarkMode ? 'border-white hover:bg-white hover:text-black' : 'border-black hover:bg-black hover:text-white'}`}
+              className={`font-mono text-xl text-left font-black p-4 border-b-2 uppercase transition-all duration-150 cursor-pointer truncate hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-y-0.5 active:translate-x-0.5 ${isDarkMode ? 'border-white hover:bg-white hover:text-black' : 'border-black hover:bg-black hover:text-white'}`}
             >
               FEEDS DASHBOARD
             </button>
             <button 
               onClick={() => navigateToPage('/post')}
-              className={`font-mono text-xl text-left font-black p-4 border-b-2 uppercase transition-all cursor-pointer truncate ${isDarkMode ? 'border-white hover:bg-white hover:text-black' : 'border-black hover:bg-black hover:text-white'}`}
+              className={`font-mono text-xl text-left font-black p-4 border-b-2 uppercase transition-all duration-150 cursor-pointer truncate hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-y-0.5 active:translate-x-0.5 ${isDarkMode ? 'border-white hover:bg-white hover:text-black' : 'border-black hover:bg-black hover:text-white'}`}
             >
               POST AN ISSUE
             </button>
             <button 
               onClick={() => navigateToPage('/leaderboard')}
-              className={`font-mono text-xl text-left font-black p-4 border-b-2 uppercase transition-all cursor-pointer truncate ${isDarkMode ? 'border-white hover:bg-white hover:text-black' : 'border-black hover:bg-black hover:text-white'}`}
+              className={`font-mono text-xl text-left font-black p-4 border-b-2 uppercase transition-all duration-150 cursor-pointer truncate hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-y-0.5 active:translate-x-0.5 ${isDarkMode ? 'border-white hover:bg-white hover:text-black' : 'border-black hover:bg-black hover:text-white'}`}
             >
               LEADERBOARD RANKINGS
             </button>
             <button 
               onClick={() => navigateToPage('/profile')}
-              className={`font-mono text-xl text-left font-black p-4 border-b-2 uppercase transition-all cursor-pointer truncate ${isDarkMode ? 'border-white hover:bg-white hover:text-black' : 'border-black hover:bg-black hover:text-white'}`}
+              className={`font-mono text-xl text-left font-black p-4 border-b-2 uppercase transition-all duration-150 cursor-pointer truncate hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-y-0.5 active:translate-x-0.5 ${isDarkMode ? 'border-white hover:bg-white hover:text-black' : 'border-black hover:bg-black hover:text-white'}`}
             >
               PROFILE INFO
             </button>
             <button 
               onClick={() => setIsDarkMode(!isDarkMode)}
-              className={`font-mono text-xl text-left font-black p-4 border-b-2 uppercase transition-all cursor-pointer truncate ${isDarkMode ? 'border-white hover:bg-white hover:text-black' : 'border-black hover:bg-black hover:text-white'}`}
+              className={`font-mono text-xl text-left font-black p-4 border-b-2 uppercase transition-all duration-150 cursor-pointer truncate hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-y-0.5 active:translate-x-0.5 ${isDarkMode ? 'border-white hover:bg-white hover:text-black' : 'border-black hover:bg-black hover:text-white'}`}
             >
               TOGGLE THEME
             </button>
@@ -283,8 +285,10 @@ function App() {
         </div>
 
         {/* Right Column - Brutalist Info Widget */}
-        <div className="hidden lg:block lg:col-span-1 sticky top-24">
-          <div className={`border-4 p-4 font-mono flex flex-col gap-4 ${isDarkMode ? 'border-white bg-zinc-900 shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]' : 'border-black bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]'}`}>
+        <div className="hidden lg:block lg:col-span-1 sticky top-24 flex flex-col gap-6">
+          <div className={`border-4 rounded-3xl p-6 font-mono flex flex-col gap-4 relative transition-all duration-300 ${isDarkMode ? 'border-white bg-zinc-900 shadow-[6px_6px_0px_0px_rgba(255,255,255,1)]' : 'border-black bg-white shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]'}`}>
+            
+            {/* Removed Geometric Sticker Accent */}
             <h2 className={`text-3xl font-black tracking-tighter uppercase border-b-4 pb-2 ${isDarkMode ? 'border-white' : 'border-black'}`}>
               LIVESTATS
             </h2>
@@ -300,6 +304,21 @@ function App() {
             </div>
             <p className={`text-xs mt-2 uppercase border-t-2 border-dashed pt-2 ${isDarkMode ? 'border-white' : 'border-black'}`}>
               * Statistics are aggregated based on real-time community reports.
+            </p>
+          </div>
+
+          <div className={`border-4 rounded-3xl p-6 font-mono flex flex-col gap-4 mt-6 relative transition-all duration-300 ${isDarkMode ? 'border-white bg-zinc-900 shadow-[6px_6px_0px_0px_rgba(255,255,255,1)]' : 'border-black bg-white shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]'}`}>
+            <h2 className={`text-3xl font-black tracking-tighter uppercase border-b-4 pb-2 ${isDarkMode ? 'border-white' : 'border-black'}`}>
+              IMPACT
+            </h2>
+            <div className="flex flex-col gap-1">
+              <span className="font-bold text-sm uppercase">Total Resolved Incidents:</span>
+              <div className={`text-4xl font-black p-4 text-center border-4 ${isDarkMode ? 'bg-white text-black border-white' : 'bg-[#00FF66] text-black border-black'}`}>
+                {resolvedIssuesCount}
+              </div>
+            </div>
+            <p className={`text-xs mt-2 uppercase border-t-2 border-dashed pt-2 ${isDarkMode ? 'border-white' : 'border-black'}`}>
+              * Issues verified and resolved by the community.
             </p>
           </div>
         </div>

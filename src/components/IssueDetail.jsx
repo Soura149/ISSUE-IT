@@ -173,9 +173,9 @@ const IssueDetail = ({ issueId, userLocation, onBack, isDarkMode }) => {
               <AlertTriangle size={32} strokeWidth={3} />
               <h1 className={`text-3xl font-black uppercase px-3 py-1 border-2 ${isDarkMode ? 'border-white shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]' : 'border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]'} ${getSeverityStyles(issue.severity)}`}>{issue.category}</h1>
             </div>
-            <span className={`font-mono border-2 px-2 py-0.5 text-xs font-bold uppercase ${isDarkMode ? 'border-white shadow-[2px_2px_0px_0px_rgba(255,255,255,1)]' : 'border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]'} ${isUnderProcess ? 'bg-[#FFCC00] text-black' : isSolved ? 'bg-[#00FF66] text-black' : isEscalated ? (isDarkMode ? 'bg-white text-black' : 'bg-black text-white') : (isDarkMode ? 'bg-zinc-900 text-white' : 'bg-white text-black')}`}>
+            <div className={`px-4 py-1 rounded-full border-2 rotate-[2deg] font-mono text-sm font-black uppercase shadow-sm ${isDarkMode ? 'border-white' : 'border-black'} ${isUnderProcess ? 'bg-[#FFCC00] text-black' : isSolved ? 'bg-[#00FF66] text-black' : isEscalated ? (isDarkMode ? 'bg-white text-black' : 'bg-black text-white') : (isDarkMode ? 'bg-zinc-900 text-white' : 'bg-white text-black')}`}>
               {issue.status}
-            </span>
+            </div>
           </div>
 
           <div className={`inline-flex items-center gap-2 font-mono text-xs border-2 px-2 py-1 mt-2 font-bold self-start ${isDarkMode ? 'border-white bg-zinc-900 text-white' : 'border-black bg-white text-black'}`}>
@@ -213,7 +213,7 @@ const IssueDetail = ({ issueId, userLocation, onBack, isDarkMode }) => {
               <button 
                 onClick={handleUpvote} 
                 disabled={isTooFar || upvoting || isPoster}
-                className={`border-4 px-4 py-2 font-black uppercase flex items-center gap-2 transition-all disabled:opacity-50 disabled:hover:translate-x-0 disabled:hover:translate-y-0 ${isDarkMode ? 'border-white bg-white text-black shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] hover:-translate-x-1 hover:-translate-y-1 hover:shadow-[8px_8px_0px_0px_rgba(255,255,255,1)] disabled:hover:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] hover:bg-zinc-900 hover:text-white' : 'border-black bg-black text-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:-translate-x-1 hover:-translate-y-1 hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] disabled:hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]'}`}
+                className={`border-4 px-4 py-2 font-black uppercase flex items-center gap-2 transition-all duration-150 disabled:opacity-50 disabled:hover:translate-x-0 disabled:hover:translate-y-0 active:translate-y-0.5 active:translate-x-0.5 ${isDarkMode ? 'border-white bg-white text-black shadow-[6px_6px_0px_0px_rgba(255,255,255,1)] hover:-translate-x-1 hover:-translate-y-1 hover:shadow-[8px_8px_0px_0px_rgba(255,255,255,1)] disabled:hover:shadow-[6px_6px_0px_0px_rgba(255,255,255,1)] hover:bg-zinc-900 hover:text-white' : 'border-black bg-black text-white shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:-translate-x-1 hover:-translate-y-1 hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] disabled:hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]'}`}
                 title={isPoster ? "You cannot co-sign your own issue." : isTooFar ? "You must be physically present near this issue to co-sign it." : ""}
               >
                 <ThumbsUp size={20} strokeWidth={3} />
@@ -269,7 +269,7 @@ const IssueDetail = ({ issueId, userLocation, onBack, isDarkMode }) => {
                 <button 
                   onClick={handleVouch}
                   disabled={vouching}
-                  className={`w-full bg-[#FFCC00] text-black font-black border-4 py-3 uppercase tracking-wider transition-all hover:-translate-y-0.5 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] disabled:opacity-50`}
+                  className={`w-full bg-[#00FF66] text-black font-black border-4 py-3 uppercase tracking-wider transition-all duration-150 hover:-translate-y-1 hover:-translate-x-1 active:translate-y-0.5 active:translate-x-0.5 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] disabled:opacity-50`}
                 >
                   {vouching ? 'VOUCHING...' : ' VOUCH FOR RESOLUTION'}
                 </button>

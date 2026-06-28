@@ -166,9 +166,9 @@ const SubmissionForm = ({ userLocation, onComplete, isDarkMode }) => {
         <p className="font-mono font-bold uppercase mt-2">Capture and submit a civic hazard</p>
       </div>
 
-      <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+      <form onSubmit={handleSubmit} className={`flex flex-col gap-6 border-4 rounded-3xl p-6 ${isDarkMode ? 'border-white bg-zinc-950 shadow-[6px_6px_0px_0px_rgba(255,255,255,1)]' : 'border-black bg-white shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]'}`}>
         {/* Multimodal Input Layout */}
-        <div className={`relative border-4 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] flex flex-col items-center justify-center p-8 min-h-[250px] ${isDarkMode ? 'border-white bg-zinc-900 shadow-[8px_8px_0px_0px_rgba(255,255,255,1)]' : 'border-black bg-white shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]'}`}>
+        <div className={`relative border-4 rounded-2xl flex flex-col items-center justify-center p-8 min-h-[250px] overflow-hidden ${isDarkMode ? 'border-white bg-zinc-900' : 'border-black bg-gray-50'}`}>
           {(processing || submitting) && (
             <div className={`absolute inset-0 z-20 flex flex-col items-center justify-center border-4 m-2 ${isDarkMode ? 'bg-zinc-900/90 border-white' : 'bg-white/90 border-black'}`}>
               <div className={`spinner mb-4 ${isDarkMode ? 'border-white' : 'border-black'}`}></div>
@@ -302,7 +302,7 @@ const SubmissionForm = ({ userLocation, onComplete, isDarkMode }) => {
 
         <button 
           type="submit" 
-          className={`mt-6 border-4 p-4 font-black uppercase text-xl flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:hover:translate-x-0 disabled:hover:translate-y-0 ${isDarkMode ? 'border-white bg-white text-black shadow-[8px_8px_0px_0px_rgba(255,255,255,1)] hover:-translate-x-1 hover:-translate-y-1 hover:shadow-[12px_12px_0px_0px_rgba(255,255,255,1)] disabled:hover:shadow-[8px_8px_0px_0px_rgba(255,255,255,1)]' : 'border-black bg-black text-white shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] hover:-translate-x-1 hover:-translate-y-1 hover:shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] disabled:hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]'}`} 
+          className={`mt-6 border-4 p-4 font-black uppercase text-xl flex items-center justify-center gap-2 transition-all duration-150 active:translate-y-0.5 active:translate-x-0.5 disabled:opacity-50 disabled:hover:translate-x-0 disabled:hover:translate-y-0 bg-[#00FF66] text-black border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:-translate-x-1 hover:-translate-y-1 hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] disabled:hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]`} 
           disabled={processing || submitting || !file}
         >
           <Send size={24} strokeWidth={3} />

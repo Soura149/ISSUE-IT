@@ -53,35 +53,35 @@ const Leaderboard = ({ isDarkMode, onSelectUser }) => {
             return (
               <div 
                 key={user.id} 
-                className={`flex justify-between items-center border-4 p-4 transition-all hover:-translate-x-0.5 ${isDarkMode ? 'bg-black border-white shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]' : 'bg-white border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]'}`}
+                className={`flex justify-between items-center border-4 p-4 transition-all hover:-translate-x-1 hover:-translate-y-1 rounded-3xl mb-4 ${index === 0 ? 'bg-[#FFCC00] text-black border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]' : isDarkMode ? 'bg-black border-white shadow-[6px_6px_0px_0px_rgba(255,255,255,1)]' : 'bg-white border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]'}`}
               >
                 <div className="flex items-center gap-4">
-                  <span className={`font-mono font-black text-lg sm:text-xl w-10 ${isDarkMode ? 'text-neutral-500' : 'text-neutral-400'}`}>
+                  <span className={`font-mono font-black text-lg sm:text-xl w-10 ${index === 0 ? 'text-black drop-shadow-sm' : isDarkMode ? 'text-neutral-500' : 'text-neutral-400'}`}>
                     #{String(index + 1).padStart(2, '0')}
                   </span>
                   {user.photoURL ? (
                     <img 
                       src={user.photoURL} 
                       onClick={() => handleUserNavigation(user.id)}
-                      className={`w-10 h-10 border-2 object-cover cursor-pointer hover:opacity-80 transition-opacity ${isDarkMode ? 'border-white' : 'border-black'}`} 
+                      className={`w-10 h-10 border-2 object-cover cursor-pointer hover:opacity-80 transition-opacity rounded-full ${index === 0 ? 'border-black' : isDarkMode ? 'border-white' : 'border-black'}`} 
                       alt="profile"
                     />
                   ) : (
                     <div 
                       onClick={() => handleUserNavigation(user.id)}
-                      className={`w-10 h-10 border-2 flex items-center justify-center font-bold text-sm cursor-pointer hover:opacity-80 transition-opacity ${isDarkMode ? 'border-white bg-black text-white' : 'border-black bg-gray-200 text-black'}`}
+                      className={`w-10 h-10 border-2 flex items-center justify-center font-bold text-sm cursor-pointer hover:opacity-80 transition-opacity rounded-full ${index === 0 ? 'border-black bg-white text-black' : isDarkMode ? 'border-white bg-black text-white' : 'border-black bg-gray-200 text-black'}`}
                     >
                       {displayUsername.substring(0,2)}
                     </div>
                   )}
                   <span 
                     onClick={() => handleUserNavigation(user.id)}
-                    className={`font-black uppercase text-sm sm:text-base tracking-tight truncate max-w-[150px] sm:max-w-xs cursor-pointer hover:underline decoration-4 ${isDarkMode ? 'text-white decoration-white' : 'text-black decoration-black'}`}
+                    className={`font-black uppercase text-sm sm:text-base tracking-tight truncate max-w-[150px] sm:max-w-xs cursor-pointer hover:underline decoration-4 ${index === 0 ? 'text-black decoration-black' : isDarkMode ? 'text-white decoration-white' : 'text-black decoration-black'}`}
                   >
                     {displayUsername}
                   </span>
                 </div>
-                <span className={`font-mono font-bold text-xs border-2 px-3 py-1 shrink-0 ${isDarkMode ? 'border-white bg-white text-black' : 'border-black bg-black text-white'}`}>
+                <span className={`font-mono font-bold text-xs border-2 px-3 py-1 shrink-0 ${index === 0 ? 'border-black bg-black text-[#FFCC00]' : isDarkMode ? 'border-white bg-white text-black' : 'border-black bg-black text-white'}`}>
                   {user.xpPoints || 0} XP
                 </span>
               </div>

@@ -100,8 +100,11 @@ const LocationFeed = ({ userLocation, onSelectIssue, isDarkMode }) => {
           <div className={`spinner ${isDarkMode ? 'border-white' : 'border-black'}`}></div>
         </div>
       ) : issues.length === 0 ? (
-        <div className={`border-4 text-center p-8 mt-4 ${isDarkMode ? 'border-white bg-zinc-900 shadow-[8px_8px_0px_0px_rgba(255,255,255,1)]' : 'border-black bg-white shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]'}`}>
-          <p className="font-black uppercase text-xl">No issues found {feedType === 'local' ? 'within 1km' : 'globally'}.</p>
+        <div className={`relative border-4 rounded-3xl text-center p-8 mt-4 overflow-hidden ${isDarkMode ? 'border-white bg-zinc-900 shadow-[6px_6px_0px_0px_rgba(255,255,255,1)]' : 'border-black bg-white shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]'}`}>
+          <svg className="absolute -bottom-10 -right-10 w-40 h-40 text-black/5 dark:text-white/5 rotate-[15deg] z-0 pointer-events-none" viewBox="0 0 100 100" fill="currentColor">
+             <path d="M50 0 L60 40 L100 50 L60 60 L50 100 L40 60 L0 50 L40 40 Z" />
+          </svg>
+          <p className="font-black uppercase text-xl relative z-10">No issues found {feedType === 'local' ? 'within 1km' : 'globally'}.</p>
         </div>
       ) : (
         <div className="flex flex-col gap-6 mt-2">
@@ -112,13 +115,13 @@ const LocationFeed = ({ userLocation, onSelectIssue, isDarkMode }) => {
               return (
                 <div 
                   key={issue.id} 
-                  className={`flex flex-col w-full p-4 border-4 mb-4 hover:-translate-y-0.5 transition-all cursor-pointer ${issue.status === 'SOLVED' ? 'opacity-75 grayscale-[0.2]' : ''} ${isDarkMode ? 'bg-black border-white shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]' : 'bg-white border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]'}`}
+                  className={`relative flex flex-col w-full p-4 border-4 mb-6 hover:-translate-y-1 hover:-translate-x-1 active:translate-y-0.5 active:translate-x-0.5 transition-all cursor-pointer rounded-3xl mt-4 ${issue.status === 'SOLVED' ? 'opacity-75 grayscale-[0.2]' : ''} ${isDarkMode ? 'bg-black border-white shadow-[6px_6px_0px_0px_rgba(255,255,255,1)]' : 'bg-white border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]'}`}
                   onClick={() => onSelectIssue(issue.id)}
                 >
-                  <div className="flex justify-between items-start mb-2">
-                    <span className={`font-mono text-xs font-black uppercase border-2 px-3 py-1 tracking-tight ${isDarkMode ? 'shadow-[2px_2px_0px_0px_rgba(255,255,255,1)]' : 'shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]'} ${getSeverityStyles(issue.severity)}`}>
-                      {issue.category}
-                    </span>
+                  <div className={`absolute -top-3 -left-3 px-3 py-1 rounded-full border-2 border-black rotate-[-2deg] font-mono text-xs font-black uppercase z-10 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] ${getSeverityStyles(issue.severity)}`}>
+                    {issue.category}
+                  </div>
+                  <div className="flex justify-end items-start mb-2">
                     <span className={`font-mono border-2 px-2 py-0.5 text-[10px] font-bold uppercase ${isDarkMode ? 'shadow-[2px_2px_0px_0px_rgba(255,255,255,1)] border-white' : 'shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] border-black'} ${issue.status === 'UNDER_PROCESS' ? 'bg-[#FFCC00] text-black' : issue.status === 'SOLVED' ? 'bg-[#00FF66] text-black' : issue.status === 'escalated' ? (isDarkMode ? 'bg-white text-black' : 'bg-black text-white') : (isDarkMode ? 'bg-zinc-900 text-white' : 'bg-white text-black')}`}>
                       {issue.status}
                     </span>
@@ -147,9 +150,12 @@ const LocationFeed = ({ userLocation, onSelectIssue, isDarkMode }) => {
             return (
               <div 
                 key={issue.id} 
-                className={`flex flex-col w-full mb-4 border-4 overflow-hidden hover:-translate-y-0.5 transition-all cursor-pointer ${issue.status === 'SOLVED' ? 'opacity-75 grayscale-[0.2]' : ''} ${isDarkMode ? 'bg-black border-white shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]' : 'bg-white border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]'}`}
+                className={`relative flex flex-col w-full mb-6 border-4 hover:-translate-y-1 hover:-translate-x-1 active:translate-y-0.5 active:translate-x-0.5 transition-all cursor-pointer rounded-3xl mt-4 ${issue.status === 'SOLVED' ? 'opacity-75 grayscale-[0.2]' : ''} ${isDarkMode ? 'bg-black border-white shadow-[6px_6px_0px_0px_rgba(255,255,255,1)]' : 'bg-white border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]'}`}
                 onClick={() => onSelectIssue(issue.id)}
               >
+                <div className={`absolute -top-3 -left-3 px-3 py-1 rounded-full border-2 border-black rotate-[-2deg] font-mono text-xs font-black uppercase z-20 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] ${getSeverityStyles(issue.severity)}`}>
+                  {issue.category}
+                </div>
                 {/* Top Meta Row */}
                 <div className="p-4 flex flex-col gap-2">
                   <div className="flex justify-between items-start">
@@ -172,10 +178,6 @@ const LocationFeed = ({ userLocation, onSelectIssue, isDarkMode }) => {
                   </div>
                   
                   <div className="mt-2 flex flex-col items-start gap-2">
-                    <div className={`font-mono text-xs font-black uppercase border-2 px-3 py-1 tracking-tight flex items-center gap-1 ${isDarkMode ? 'shadow-[2px_2px_0px_0px_rgba(255,255,255,1)]' : 'shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]'} ${getSeverityStyles(issue.severity)}`}>
-                      <AlertTriangle size={16} strokeWidth={3} />
-                      {issue.category}
-                    </div>
                     <p className={`font-mono text-xs font-bold uppercase mt-1 ${isDarkMode ? 'text-gray-300' : 'text-gray-800'}`}> {issue.location_name}</p>
                   </div>
                 </div>
