@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getIssue, upvoteIssue, calculateDistance } from '../services/liveFirebase';
+import { getIssue, upvoteIssue, calculateDistance, getSessionId } from '../services/liveFirebase';
 import { generateImpactCard } from './CanvasRenderer';
 import { AlertTriangle, MapPin, Share2, Copy, ThumbsUp, ArrowLeft, Mail, MessageSquare } from 'lucide-react';
 
@@ -92,6 +92,8 @@ const IssueDetail = ({ issueId, userLocation, onBack }) => {
 
   const isEscalated = issue.status === 'escalated';
   const isTooFar = distance !== null && distance > 500000;
+  const currentUserId = getSessionId();
+  const isPoster = issue.reporter_session_id === currentUserId;
 
   return (
     <div className="flex flex-col gap-6">
@@ -147,16 +149,21 @@ const IssueDetail = ({ issueId, userLocation, onBack }) => {
             <div className="relative group">
               <button 
                 onClick={handleUpvote} 
-                disabled={isTooFar || upvoting}
+                disabled={isTooFar || upvoting || isPoster}
                 className="border-4 border-black px-4 py-2 font-black uppercase flex items-center gap-2 bg-black text-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:-translate-x-1 hover:-translate-y-1 hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] disabled:opacity-50 disabled:hover:translate-x-0 disabled:hover:translate-y-0 disabled:hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all"
-                title={isTooFar ? "You must be physically present near this issue to co-sign it." : ""}
+                title={isPoster ? "You cannot co-sign your own issue." : isTooFar ? "You must be physically present near this issue to co-sign it." : ""}
               >
                 <ThumbsUp size={20} strokeWidth={3} />
                 I'M AFFECTED
               </button>
-              {isTooFar && (
-                <p className="font-mono text-sm mt-2 text-center font-bold border-2 border-black bg-white absolute w-full -bottom-8">
+              {isTooFar && !isPoster && (
+                <p className="font-mono text-sm mt-2 text-center font-bold border-2 border-black bg-white absolute w-full -bottom-8 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
                   TOO FAR (&lt; 500KM)
+                </p>
+              )}
+              {isPoster && (
+                <p className="font-mono text-sm mt-2 text-center font-bold border-2 border-black bg-white absolute w-full -bottom-8 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
+                  YOUR ISSUE
                 </p>
               )}
             </div>

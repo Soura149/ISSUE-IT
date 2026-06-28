@@ -135,6 +135,10 @@ export const upvoteIssue = async (issueId, userLat, userLon) => {
       
       const issue = issueDoc.data();
 
+      if (issue.reporter_session_id === uid) {
+        throw new Error("You cannot co-sign your own issue.");
+      }
+
       // Proximity Gate (< 500km)
       const distance = calculateDistance(userLat, userLon, issue.latitude, issue.longitude);
       if (distance > 500000) {
