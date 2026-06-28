@@ -49,6 +49,7 @@ export const createIssue = async (issueData) => {
   const user = auth.currentUser;
   const newIssue = {
     ...issueData,
+    location_name: issueData.locationName || 'Unknown Location',
     upvote_count: 1,
     status: "open",
     reporter_session_id: user ? user.uid : null,

@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { Upload, Camera, Send } from 'lucide-react';
-import { classifyUploadedImage, createIssue } from '../services/liveFirebase';
+import { classifyUploadedImage, createIssue, getIssues, calculateDistance } from '../services/liveFirebase';
 
 const SubmissionForm = ({ userLocation, onComplete }) => {
   const [file, setFile] = useState(null);
@@ -8,6 +8,7 @@ const SubmissionForm = ({ userLocation, onComplete }) => {
   const [processing, setProcessing] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [formData, setFormData] = useState({
+    locationName: '',
     category: '',
     severity: '',
     description: ''
@@ -68,6 +69,25 @@ const SubmissionForm = ({ userLocation, onComplete }) => {
     }
     setSubmitting(true);
     try {
+      // Deduplication Check
+      const existingIssues = await getIssues();
+      const duplicate = existingIssues.find(issue => {
+        if (issue.category !== (formData.category || 'other')) return false;
+        const dist = calculateDistance(
+          userLocation.latitude, 
+          userLocation.longitude, 
+          issue.latitude, 
+          issue.longitude
+        );
+        return dist <= 10;
+      });
+
+      if (duplicate) {
+        alert("This issue has already been reported at this exact location!");
+        setSubmitting(false);
+        return;
+      }
+
       let finalPhotoUrl = photoUrl;
       if (file) {
         // Unsigned Cloudinary Upload
@@ -77,6 +97,7 @@ const SubmissionForm = ({ userLocation, onComplete }) => {
       await createIssue({
         latitude: userLocation.latitude,
         longitude: userLocation.longitude,
+        locationName: formData.locationName,
         category: formData.category || 'other',
         severity: formData.severity || 'low',
         description: formData.description,
@@ -152,6 +173,18 @@ const SubmissionForm = ({ userLocation, onComplete }) => {
         </div>
 
         {/* Auto-populated fields */}
+        <div className="flex flex-col gap-2">
+          <label className="font-black uppercase text-xl">Location Landmark</label>
+          <input 
+            type="text" 
+            className="w-full p-3 font-mono text-sm bg-white border-4 border-black font-bold focus:outline-none focus:bg-yellow-50 placeholder-gray-500 mb-4" 
+            placeholder="e.g. Near Sector 5 Metro Station"
+            value={formData.locationName}
+            onChange={e => setFormData({...formData, locationName: e.target.value})}
+            required
+          />
+        </div>
+
         <div className="flex flex-col gap-2">
           <label className="font-black uppercase text-xl">Category</label>
           <select 
