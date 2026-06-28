@@ -1,5 +1,15 @@
 {
   "projects": {
     "default": "civicpulse-ffd2f"
-  }
+  },
+  "targets": {
+    "civicpulse-ffd2f": {
+      "hosting": {
+        "issueit_target": [
+          "issue-it"
+        ]
+      }
+    }
+  },
+  "etags": {}
 }
