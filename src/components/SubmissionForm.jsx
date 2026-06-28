@@ -2,7 +2,7 @@ import React, { useState, useRef } from 'react';
 import { Upload, Camera, Send } from 'lucide-react';
 import { classifyUploadedImage, createIssue, getIssues, calculateDistance } from '../services/liveFirebase';
 
-const SubmissionForm = ({ userLocation, onComplete }) => {
+const SubmissionForm = ({ userLocation, onComplete, isDarkMode }) => {
   const [file, setFile] = useState(null);
   const [photoUrl, setPhotoUrl] = useState(null);
   const [processing, setProcessing] = useState(false);
@@ -113,18 +113,18 @@ const SubmissionForm = ({ userLocation, onComplete }) => {
   };
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="border-b-4 border-black pb-4">
+    <div className={`flex flex-col gap-6 ${isDarkMode ? 'text-white' : 'text-black'}`}>
+      <div className={`border-b-4 pb-4 ${isDarkMode ? 'border-white' : 'border-black'}`}>
         <h1 className="text-4xl font-black uppercase tracking-tight leading-none">Report Issue</h1>
         <p className="font-mono font-bold uppercase mt-2">Capture and submit a civic hazard</p>
       </div>
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-6">
         {/* Multimodal Input Layout */}
-        <div className="relative overflow-hidden border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] bg-white flex flex-col items-center justify-center p-8 min-h-[250px]">
+        <div className={`relative overflow-hidden border-4 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] flex flex-col items-center justify-center p-8 min-h-[250px] ${isDarkMode ? 'border-white bg-zinc-900 shadow-[8px_8px_0px_0px_rgba(255,255,255,1)]' : 'border-black bg-white shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]'}`}>
           {(processing || submitting) && (
-            <div className="absolute inset-0 bg-white/90 z-10 flex flex-col items-center justify-center border-4 border-black m-2">
-              <div className="spinner border-black mb-4"></div>
+            <div className={`absolute inset-0 z-10 flex flex-col items-center justify-center border-4 m-2 ${isDarkMode ? 'bg-zinc-900/90 border-white' : 'bg-white/90 border-black'}`}>
+              <div className={`spinner mb-4 ${isDarkMode ? 'border-white' : 'border-black'}`}></div>
               <p className="font-black uppercase text-xl text-center px-4">{processing ? "AI Analysis in Progress..." : "Publishing Issue..."}</p>
             </div>
           )}
@@ -136,7 +136,7 @@ const SubmissionForm = ({ userLocation, onComplete }) => {
               <div className="flex flex-wrap justify-center gap-4">
                 <button 
                   type="button" 
-                  className="border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] bg-white px-4 py-2 font-black uppercase flex items-center gap-2 hover:-translate-x-1 hover:-translate-y-1 hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] transition-all"
+                  className={`border-4 px-4 py-2 font-black uppercase flex items-center gap-2 transition-all ${isDarkMode ? 'border-white bg-zinc-900 text-white shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] hover:-translate-x-1 hover:-translate-y-1 hover:shadow-[8px_8px_0px_0px_rgba(255,255,255,1)] hover:bg-white hover:text-black' : 'border-black bg-white text-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:-translate-x-1 hover:-translate-y-1 hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]'}`}
                   onClick={() => cameraInputRef.current.click()}
                 >
                   <Camera size={24} strokeWidth={3} />
@@ -144,14 +144,14 @@ const SubmissionForm = ({ userLocation, onComplete }) => {
                 </button>
                 <button 
                   type="button" 
-                  className="border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] bg-white px-4 py-2 font-black uppercase flex items-center gap-2 hover:-translate-x-1 hover:-translate-y-1 hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] transition-all"
+                  className={`border-4 px-4 py-2 font-black uppercase flex items-center gap-2 transition-all ${isDarkMode ? 'border-white bg-zinc-900 text-white shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] hover:-translate-x-1 hover:-translate-y-1 hover:shadow-[8px_8px_0px_0px_rgba(255,255,255,1)] hover:bg-white hover:text-black' : 'border-black bg-white text-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:-translate-x-1 hover:-translate-y-1 hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]'}`}
                   onClick={() => fileInputRef.current.click()}
                 >
                   <Upload size={24} strokeWidth={3} />
                   Upload
                 </button>
               </div>
-              <p className="font-mono font-bold uppercase text-center bg-gray-100 border-2 border-black px-2 py-1">Upload a clear photo of the hazard</p>
+              <p className={`font-mono font-bold uppercase text-center border-2 px-2 py-1 ${isDarkMode ? 'bg-zinc-800 border-white text-gray-300' : 'bg-gray-100 border-black'}`}>Upload a clear photo of the hazard</p>
             </div>
           )}
           
@@ -177,7 +177,7 @@ const SubmissionForm = ({ userLocation, onComplete }) => {
           <label className="font-black uppercase text-xl">Location Landmark</label>
           <input 
             type="text" 
-            className="w-full p-3 font-mono text-sm bg-white border-4 border-black font-bold focus:outline-none focus:bg-yellow-50 placeholder-gray-500 mb-4" 
+            className={`w-full p-3 font-mono text-sm border-4 font-bold focus:outline-none mb-4 ${isDarkMode ? 'bg-zinc-900 border-white text-white focus:bg-zinc-800 placeholder-gray-400' : 'bg-white border-black text-black focus:bg-yellow-50 placeholder-gray-500'}`}
             placeholder="e.g. Near Sector 5 Metro Station"
             value={formData.locationName}
             onChange={e => setFormData({...formData, locationName: e.target.value})}
@@ -188,7 +188,7 @@ const SubmissionForm = ({ userLocation, onComplete }) => {
         <div className="flex flex-col gap-2">
           <label className="font-black uppercase text-xl">Category</label>
           <select 
-            className="border-4 border-black p-3 font-bold text-lg bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] focus:outline-none focus:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] transition-all uppercase appearance-none" 
+            className={`border-4 p-3 font-bold text-lg transition-all uppercase appearance-none focus:outline-none ${isDarkMode ? 'border-white bg-zinc-900 text-white shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] focus:shadow-[8px_8px_0px_0px_rgba(255,255,255,1)]' : 'border-black bg-white text-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] focus:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]'}`} 
             value={formData.category} 
             onChange={e => setFormData({...formData, category: e.target.value})}
             required
@@ -209,7 +209,11 @@ const SubmissionForm = ({ userLocation, onComplete }) => {
               <button
                 key={sev}
                 type="button"
-                className={`flex-1 min-w-[80px] border-4 border-black p-2 font-black uppercase shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all ${formData.severity === sev ? 'bg-black text-white shadow-none translate-x-[4px] translate-y-[4px]' : 'bg-white text-black hover:-translate-x-1 hover:-translate-y-1 hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]'}`}
+                className={`flex-1 min-w-[80px] border-4 p-2 font-black uppercase transition-all ${
+                  formData.severity === sev 
+                    ? (isDarkMode ? 'bg-white text-black border-white translate-x-[4px] translate-y-[4px]' : 'bg-black text-white border-black translate-x-[4px] translate-y-[4px]') 
+                    : (isDarkMode ? 'bg-zinc-900 text-white border-white shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] hover:-translate-x-1 hover:-translate-y-1 hover:shadow-[8px_8px_0px_0px_rgba(255,255,255,1)]' : 'bg-white text-black border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:-translate-x-1 hover:-translate-y-1 hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]')
+                }`}
                 onClick={() => setFormData({...formData, severity: sev})}
               >
                 {sev}
@@ -221,7 +225,7 @@ const SubmissionForm = ({ userLocation, onComplete }) => {
         <div className="flex flex-col gap-2 mt-4">
           <label className="font-black uppercase text-xl">Description</label>
           <textarea 
-            className="border-4 border-black p-3 font-bold text-lg bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] focus:outline-none focus:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] transition-all resize-none" 
+            className={`border-4 p-3 font-bold text-lg transition-all resize-none focus:outline-none ${isDarkMode ? 'border-white bg-zinc-900 text-white shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] focus:shadow-[8px_8px_0px_0px_rgba(255,255,255,1)] placeholder-gray-400' : 'border-black bg-white text-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] focus:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] placeholder-gray-500'}`} 
             rows="4" 
             value={formData.description}
             onChange={e => setFormData({...formData, description: e.target.value})}
@@ -232,7 +236,7 @@ const SubmissionForm = ({ userLocation, onComplete }) => {
 
         <button 
           type="submit" 
-          className="mt-6 border-4 border-black bg-black text-white p-4 font-black uppercase text-xl flex items-center justify-center gap-2 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] hover:-translate-x-1 hover:-translate-y-1 hover:shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] disabled:opacity-50 disabled:hover:translate-x-0 disabled:hover:translate-y-0 disabled:hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] transition-all" 
+          className={`mt-6 border-4 p-4 font-black uppercase text-xl flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:hover:translate-x-0 disabled:hover:translate-y-0 ${isDarkMode ? 'border-white bg-white text-black shadow-[8px_8px_0px_0px_rgba(255,255,255,1)] hover:-translate-x-1 hover:-translate-y-1 hover:shadow-[12px_12px_0px_0px_rgba(255,255,255,1)] disabled:hover:shadow-[8px_8px_0px_0px_rgba(255,255,255,1)]' : 'border-black bg-black text-white shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] hover:-translate-x-1 hover:-translate-y-1 hover:shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] disabled:hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]'}`} 
           disabled={processing || submitting || !file}
         >
           <Send size={24} strokeWidth={3} />
