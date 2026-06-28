@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getIssue, upvoteIssue, calculateDistance, getSessionId } from '../services/liveFirebase';
+import { getIssue, upvoteIssue, calculateDistance, getSessionId, resolveIssue } from '../services/liveFirebase';
 import { generateImpactCard } from './CanvasRenderer';
 import { AlertTriangle, MapPin, Share2, Copy, ThumbsUp, ArrowLeft, Mail, MessageSquare } from 'lucide-react';
 import { getSeverityStyles } from '../utils/theme';
@@ -48,6 +48,20 @@ const IssueDetail = ({ issueId, userLocation, onBack, isDarkMode }) => {
     }
   };
 
+  const handleResolve = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      await resolveIssue(issueId);
+      const data = await getIssue(issueId);
+      setIssue(data);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const generateAndShareCard = async () => {
     try {
       const dataUrl = await generateImpactCard(issue);
@@ -92,6 +106,7 @@ const IssueDetail = ({ issueId, userLocation, onBack, isDarkMode }) => {
   );
 
   const isEscalated = issue.status === 'escalated';
+  const isSolved = issue.status === 'SOLVED';
   const isTooFar = distance !== null && distance > 500000;
   const currentUserId = getSessionId();
   const isPoster = issue.reporter_session_id === currentUserId;
@@ -146,7 +161,7 @@ const IssueDetail = ({ issueId, userLocation, onBack, isDarkMode }) => {
             UPVOTES: <span className="text-2xl">{issue.upvote_count}</span>
           </div>
           
-          {!isEscalated && (
+          {!isEscalated && !isSolved && (
             <div className="relative group">
               <button 
                 onClick={handleUpvote} 
@@ -173,7 +188,22 @@ const IssueDetail = ({ issueId, userLocation, onBack, isDarkMode }) => {
 
         {error && <p className={`font-black uppercase text-red-600 border-4 border-red-600 p-2 text-center ${isDarkMode ? 'bg-red-950' : 'bg-red-100'}`}>{error}</p>}
 
-        {issue.upvote_count < ESCALATION_THRESHOLD ? (
+        {isSolved ? (
+          <div className={`border-t-4 pt-6 ${isDarkMode ? 'border-white' : 'border-black'}`}>
+            <div className={`border-4 p-4 text-center font-black uppercase text-xl ${isDarkMode ? 'bg-zinc-800 border-white text-white shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]' : 'bg-gray-100 border-black text-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]'}`}>
+              🎉 COMMUNITY RESOLVED
+            </div>
+          </div>
+        ) : isPoster ? (
+          <div className={`border-t-4 pt-6 ${isDarkMode ? 'border-white' : 'border-black'}`}>
+            <button 
+              onClick={handleResolve}
+              className={`w-full bg-[#00FF66] text-black font-black border-4 py-3 uppercase tracking-wider transition-all hover:-translate-y-0.5 ${isDarkMode ? 'border-white shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]' : 'border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]'}`}
+            >
+              ✅ MARK AS RESOLVED
+            </button>
+          </div>
+        ) : issue.upvote_count < ESCALATION_THRESHOLD ? (
           <div className={`border-t-4 pt-6 ${isDarkMode ? 'border-white' : 'border-black'}`}>
             <div className={`border-4 p-4 text-center font-mono font-bold text-sm tracking-tight ${isDarkMode ? 'bg-zinc-900 border-white text-white' : 'bg-white border-black text-black'}`}>
               🔓 ESCALATION SUITE UNLOCKS AT {ESCALATION_THRESHOLD} UPVOTES (CURRENT: {issue.upvote_count})
@@ -188,7 +218,7 @@ const IssueDetail = ({ issueId, userLocation, onBack, isDarkMode }) => {
               🔥 GENERATE ESCALATION SUITE
             </button>
           </div>
-        ) : issue.escalation_data && (
+        ) : issue.escalation_data ? (
           <div className={`border-t-4 pt-6 flex flex-col gap-6 ${isDarkMode ? 'border-white' : 'border-black'}`}>
             <h2 className="text-2xl font-black uppercase flex items-center gap-2">
               <AlertTriangle size={24} strokeWidth={3} /> CIVIC ACTION SUITE
@@ -246,7 +276,7 @@ const IssueDetail = ({ issueId, userLocation, onBack, isDarkMode }) => {
               GENERATE & SHARE IMPACT CARD
             </button>
           </div>
-        )}
+        ) : null}
       </div>
     </div>
   );

@@ -5,7 +5,8 @@ import { getIssues } from './services/liveFirebase';
 import LocationFeed from './components/LocationFeed';
 import SubmissionForm from './components/SubmissionForm';
 import IssueDetail from './components/IssueDetail';
-import { PlusCircle, List, Menu } from 'lucide-react';
+import Profile from './components/Profile';
+import { Menu } from 'lucide-react';
 
 function App() {
   const [session, setSession] = useState(null);
@@ -118,8 +119,8 @@ function App() {
               📝 POST AN ISSUE
             </button>
             <button 
-              className={`font-mono text-xl text-left font-black p-4 border-b-2 opacity-50 cursor-not-allowed uppercase ${isDarkMode ? 'border-white' : 'border-black'}`}
-              disabled
+              onClick={() => navigate('profile')}
+              className={`font-mono text-xl text-left font-black p-4 border-b-2 uppercase transition-all cursor-pointer ${isDarkMode ? 'border-white hover:bg-white hover:text-black' : 'border-black hover:bg-black hover:text-white'}`}
             >
               👤 PROFILE INFO
             </button>
@@ -200,6 +201,13 @@ function App() {
               userLocation={userLocation}
               onBack={() => navigate('feed')} 
               isDarkMode={isDarkMode}
+            />
+          )}
+          {currentView === 'profile' && (
+            <Profile 
+              session={session} 
+              isDarkMode={isDarkMode} 
+              onSelectIssue={(id) => navigate('detail', id)} 
             />
           )}
         </div>

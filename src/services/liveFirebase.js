@@ -44,6 +44,18 @@ export const getIssue = async (id) => {
   }
 };
 
+export const getUserIssues = async (uid) => {
+  const querySnapshot = await getDocs(collection(db, "issues"));
+  const issues = [];
+  querySnapshot.forEach((docSnap) => {
+    const data = docSnap.data();
+    if (data.reporter_session_id === uid) {
+      issues.push({ id: docSnap.id, ...data });
+    }
+  });
+  return issues;
+};
+
 export const createIssue = async (issueData) => {
   const newIssueRef = doc(collection(db, "issues"));
   const user = auth.currentUser;
@@ -174,6 +186,39 @@ export const upvoteIssue = async (issueId, userLat, userLon) => {
       if (escalationData) {
         issueUpdates.escalation_data = escalationData;
       }
+      
+      transaction.update(issueRef, issueUpdates);
+      return { id: issueId, ...issue, ...issueUpdates };
+    });
+
+    return updatedIssueData;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const resolveIssue = async (issueId) => {
+  const uid = getSessionId();
+  if (!uid) throw new Error("Must be logged in to resolve issue");
+  
+  const issueRef = doc(db, "issues", issueId);
+
+  try {
+    const updatedIssueData = await runTransaction(db, async (transaction) => {
+      const issueDoc = await transaction.get(issueRef);
+      if (!issueDoc.exists()) {
+        throw new Error("Issue not found");
+      }
+      
+      const issue = issueDoc.data();
+
+      if (issue.reporter_session_id !== uid) {
+        throw new Error("Only the creator can mark this issue as resolved.");
+      }
+
+      const issueUpdates = {
+        status: "SOLVED"
+      };
       
       transaction.update(issueRef, issueUpdates);
       return { id: issueId, ...issue, ...issueUpdates };

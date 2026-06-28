@@ -102,20 +102,20 @@ const LocationFeed = ({ userLocation, onSelectIssue, isDarkMode }) => {
               return (
                 <div 
                   key={issue.id} 
-                  className={`flex flex-col p-4 border-4 hover:-translate-y-0.5 transition-all cursor-pointer ${isDarkMode ? 'bg-zinc-900 border-white shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]' : 'bg-white border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]'}`}
+                  className={`flex flex-col p-4 border-4 hover:-translate-y-0.5 transition-all cursor-pointer ${issue.status === 'SOLVED' ? 'opacity-75 grayscale-[0.2]' : ''} ${isDarkMode ? 'bg-zinc-900 border-white shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]' : 'bg-white border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]'}`}
                   onClick={() => onSelectIssue(issue.id)}
                 >
                   <div className="flex justify-between items-start mb-2">
                     <span className={`font-mono text-xs font-black uppercase border-2 px-3 py-1 tracking-tight ${isDarkMode ? 'shadow-[2px_2px_0px_0px_rgba(255,255,255,1)]' : 'shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]'} ${getSeverityStyles(issue.severity)}`}>
                       {issue.category}
                     </span>
-                    <span className={`font-mono border-2 px-2 py-0.5 text-[10px] font-bold uppercase ${isDarkMode ? 'shadow-[2px_2px_0px_0px_rgba(255,255,255,1)] border-white' : 'shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] border-black'} ${issue.status === 'escalated' ? (isDarkMode ? 'bg-white text-black' : 'bg-black text-white') : (isDarkMode ? 'bg-zinc-900 text-white' : 'bg-white text-black')}`}>
+                    <span className={`font-mono border-2 px-2 py-0.5 text-[10px] font-bold uppercase ${isDarkMode ? 'shadow-[2px_2px_0px_0px_rgba(255,255,255,1)] border-white' : 'shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] border-black'} ${issue.status === 'SOLVED' ? 'bg-[#00FF66] text-black' : issue.status === 'escalated' ? (isDarkMode ? 'bg-white text-black' : 'bg-black text-white') : (isDarkMode ? 'bg-zinc-900 text-white' : 'bg-white text-black')}`}>
                       {issue.status}
                     </span>
                   </div>
                   <p className={`font-mono text-xs font-bold uppercase mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-800'}`}>📍 {issue.location_name}</p>
-                  <h3 className={`text-xl font-black uppercase tracking-tight line-clamp-1 ${isDarkMode ? 'text-white' : 'text-black'}`}>{issue.category} Report</h3>
-                  <p className={`font-mono text-sm mt-2 line-clamp-2 ${isDarkMode ? 'text-gray-200' : 'text-black'}`}>{issue.description || issue.ai_description}</p>
+                  <h3 className={`text-xl font-black uppercase tracking-tight line-clamp-1 ${issue.status === 'SOLVED' ? 'line-through' : ''} ${isDarkMode ? 'text-white' : 'text-black'}`}>{issue.category} Report</h3>
+                  <p className={`font-mono text-sm mt-2 line-clamp-2 ${issue.status === 'SOLVED' ? 'line-through' : ''} ${isDarkMode ? 'text-gray-200' : 'text-black'}`}>{issue.description || issue.ai_description}</p>
                   
                   <div className="flex flex-wrap items-center gap-2 mt-4">
                     <span className={`font-mono text-[10px] font-bold uppercase border-2 px-2 py-0.5 flex items-center gap-1 ${isDarkMode ? 'border-white bg-zinc-900 text-white' : 'border-black bg-white text-black'}`}>
@@ -137,7 +137,7 @@ const LocationFeed = ({ userLocation, onSelectIssue, isDarkMode }) => {
             return (
               <div 
                 key={issue.id} 
-                className={`flex flex-col border-4 overflow-hidden hover:-translate-y-0.5 transition-all cursor-pointer ${isDarkMode ? 'bg-zinc-900 border-white shadow-[6px_6px_0px_0px_rgba(255,255,255,1)]' : 'bg-white border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]'}`}
+                className={`flex flex-col border-4 overflow-hidden hover:-translate-y-0.5 transition-all cursor-pointer ${issue.status === 'SOLVED' ? 'opacity-75 grayscale-[0.2]' : ''} ${isDarkMode ? 'bg-zinc-900 border-white shadow-[6px_6px_0px_0px_rgba(255,255,255,1)]' : 'bg-white border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]'}`}
                 onClick={() => onSelectIssue(issue.id)}
               >
                 {/* Top Meta Row */}
@@ -155,7 +155,7 @@ const LocationFeed = ({ userLocation, onSelectIssue, isDarkMode }) => {
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className={`font-mono border-2 px-2 py-0.5 text-[10px] font-bold uppercase ${isDarkMode ? 'shadow-[2px_2px_0px_0px_rgba(255,255,255,1)] border-white' : 'shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] border-black'} ${issue.status === 'escalated' ? (isDarkMode ? 'bg-white text-black' : 'bg-black text-white') : (isDarkMode ? 'bg-zinc-900 text-white' : 'bg-white text-black')}`}>
+                      <span className={`font-mono border-2 px-2 py-0.5 text-[10px] font-bold uppercase ${isDarkMode ? 'shadow-[2px_2px_0px_0px_rgba(255,255,255,1)] border-white' : 'shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] border-black'} ${issue.status === 'SOLVED' ? 'bg-[#00FF66] text-black' : issue.status === 'escalated' ? (isDarkMode ? 'bg-white text-black' : 'bg-black text-white') : (isDarkMode ? 'bg-zinc-900 text-white' : 'bg-white text-black')}`}>
                         {issue.status}
                       </span>
                     </div>
@@ -179,7 +179,7 @@ const LocationFeed = ({ userLocation, onSelectIssue, isDarkMode }) => {
 
                 {/* Bottom text content section */}
                 <div className="p-4 flex flex-col space-y-2">
-                  <p className={`font-mono text-sm line-clamp-2 ${isDarkMode ? 'text-gray-200' : 'text-black'}`}>{issue.description || issue.ai_description}</p>
+                  <p className={`font-mono text-sm line-clamp-2 ${issue.status === 'SOLVED' ? 'line-through' : ''} ${isDarkMode ? 'text-gray-200' : 'text-black'}`}>{issue.description || issue.ai_description}</p>
                   <div className="flex flex-wrap items-center gap-2 mt-2">
                     <span className={`font-mono text-[10px] font-bold uppercase border-2 px-2 py-0.5 ${isDarkMode ? 'border-white bg-zinc-900 text-white' : 'border-black bg-white text-black'}`}>
                       UPVOTES: {issue.upvote_count}
