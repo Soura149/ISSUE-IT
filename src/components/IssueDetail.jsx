@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getIssue, upvoteIssue, calculateDistance, getSessionId, submitResolutionProof, vouchForResolution } from '../services/liveFirebase';
+import { getIssue, upvoteIssue, calculateDistance, getSessionId, submitResolutionProof, vouchForResolution, deleteIssue, checkHasVouched } from '../services/liveFirebase';
 import { uploadImageToCloudinary } from '../services/cloudinary';
 import { generateImpactCard } from './CanvasRenderer';
 import { AlertTriangle, MapPin, Share2, Copy, ThumbsUp, ArrowLeft, Mail, MessageSquare, ChevronDown, ChevronUp } from 'lucide-react';
@@ -27,6 +27,24 @@ const IssueDetail = ({ issueId, userLocation, onBack, isDarkMode, session }) => 
   const [copied, setCopied] = useState(false);
   const [isSopOpen, setIsSopOpen] = useState(false);
   const [modalImageSrc, setModalImageSrc] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [hasVouched, setHasVouched] = useState(false);
+
+  const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL;
+  const isAdmin = session?.email && session.email === ADMIN_EMAIL;
+
+  const handleDelete = async () => {
+    if (!window.confirm("Are you sure you want to permanently delete this issue? This action cannot be undone.")) return;
+    setIsDeleting(true);
+    setError('');
+    try {
+      await deleteIssue(issueId);
+      onBack();
+    } catch (err) {
+      setError(err.message);
+      setIsDeleting(false);
+    }
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -39,8 +57,10 @@ const IssueDetail = ({ issueId, userLocation, onBack, isDarkMode, session }) => 
         }
       }
 
-      const data = await getIssue(issueId);
+      let data = await getIssue(issueId);
       setIssue(data);
+      const vouchedStatus = await checkHasVouched(issueId);
+      setHasVouched(vouchedStatus);
       if (data && userLocation) {
         const dist = calculateDistance(
           userLocation.latitude,
@@ -102,9 +122,12 @@ const IssueDetail = ({ issueId, userLocation, onBack, isDarkMode, session }) => 
     setVouching(true);
     setError('');
     try {
-      await vouchForResolution(issueId);
-      const data = await getIssue(issueId);
-      setIssue(data);
+      const updatedIssue = await vouchForResolution(issueId);
+      if (updatedIssue.status === 'UNDER_PROCESS' && (updatedIssue.verification_upvotes || 0) >= 1) {
+        updatedIssue.status = 'SOLVED';
+      }
+      setIssue(updatedIssue);
+      setHasVouched(updatedIssue.hasVouchedNow);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -193,8 +216,8 @@ Hazard Details: ${issue.description || issue.ai_description || 'No description p
 
 This ongoing issue poses a continuous threat to public safety, local commuter traffic, and community health in our neighborhood. As the local administrative framework (Panchayat/Municipality) is statutorily responsible for public safety and infrastructure maintenance, I request your office to urgently direct the concerned department engineers/field staff to inspect the site and initiate repairs.
 
-A community-verified report containing photographic evidence has been logged by local residents under tracking reference link: ${window.location.origin}/detail/${issue.id || issueId}
-
+A community-verified report containing photographic evidence has been logged by local residents under tracking reference ID: ${issue.id || issueId}
+Reference Link: ${window.location.origin}/detail/${issue.id || issueId}
 Thanking you.
 
 Yours faithfully,
@@ -205,15 +228,23 @@ Contact/Email: ${contact}`;
 
   return (
     <div className={`w-full min-h-screen bg-white dark:bg-neutral-950 p-3 sm:p-4 md:p-8 box-border overflow-x-hidden flex flex-col gap-6 ${isDarkMode ? 'bg-neutral-950 text-white' : 'text-black'}`}>
-      <div className="mt-2">
+      <div className="mt-2 flex justify-between items-center">
         <button
           onClick={onBack}
           className={`border-4 px-4 py-2 font-black uppercase flex items-center gap-2 transition-all ${isDarkMode ? 'border-white bg-zinc-900 text-white shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] hover:-translate-x-1 hover:-translate-y-1 hover:shadow-[8px_8px_0px_0px_rgba(255,255,255,1)] hover:bg-white hover:text-black' : 'border-black bg-white text-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:-translate-x-1 hover:-translate-y-1 hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] hover:bg-black hover:text-white'}`}
         >
           <ArrowLeft size={20} strokeWidth={3} /> BACK
         </button>
+        {isAdmin && (
+          <button
+            onClick={handleDelete}
+            disabled={isDeleting}
+            className={`border-4 px-4 py-2 font-black uppercase flex items-center gap-2 transition-all bg-[#FF0055] text-white ${isDarkMode ? 'border-white shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] hover:shadow-[8px_8px_0px_0px_rgba(255,255,255,1)]' : 'border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]'} hover:-translate-x-1 hover:-translate-y-1 disabled:opacity-50`}
+          >
+            {isDeleting ? 'DELETING...' : 'DELETE (ADMIN)'}
+          </button>
+        )}
       </div>
-
       <div className={`border-4 p-4 md:p-8 flex flex-col gap-6 ${isDarkMode ? 'border-white shadow-[6px_6px_0px_0px_rgba(255,255,255,1)] bg-zinc-900' : 'border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] bg-white'}`}>
         {issue.photo_url && (
           <div
@@ -332,104 +363,104 @@ Contact/Email: ${contact}`;
           !isPoster ? (
             <div className={`border-t-4 pt-6 flex flex-col gap-4 ${isDarkMode ? 'border-white' : 'border-black'}`}>
               <div className={`font-mono text-center text-xs md:text-sm font-bold p-2 border-2 ${isDarkMode ? 'border-white bg-zinc-900 text-white' : 'border-black bg-white text-black'}`}>
-                VERIFICATION VOTES: {issue.verification_upvotes || 0} / 3
+                VERIFICATION VOTES: {issue.verification_upvotes || 0} / 1
               </div>
               <button
                 onClick={handleVouch}
                 disabled={vouching}
-                className={`w-full bg-[#00FF66] text-black font-black border-4 py-3 text-sm md:text-base uppercase tracking-wider transition-all duration-150 hover:-translate-y-1 hover:-translate-x-1 active:translate-y-0.5 active:translate-x-0.5 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] disabled:opacity-50`}
+                className={`w-full font-black border-4 py-3 text-sm md:text-base uppercase tracking-wider transition-all duration-150 hover:-translate-y-1 hover:-translate-x-1 active:translate-y-0.5 active:translate-x-0.5 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] disabled:opacity-50 ${hasVouched ? 'bg-[#FF3366] text-white' : 'bg-[#00FF66] text-black'}`}
               >
-                {vouching ? 'VOUCHING...' : ' VOUCH FOR RESOLUTION'}
+                {vouching ? 'PROCESSING...' : hasVouched ? 'REMOVE VOUCH' : 'VOUCH FOR RESOLUTION'}
               </button>
             </div>
           ) : (
             <div className={`border-t-4 pt-6 flex flex-col gap-4 ${isDarkMode ? 'border-white' : 'border-black'}`}>
               <div className={`font-mono text-center text-xs md:text-sm font-bold p-2 border-2 ${isDarkMode ? 'border-white bg-zinc-900 text-white' : 'border-black bg-white text-black'}`}>
-                VERIFICATION VOTES: {issue.verification_upvotes || 0} / 3
+                VERIFICATION VOTES: {issue.verification_upvotes || 0} / 1
               </div>
               <div className={`border-4 p-4 text-center font-black uppercase text-sm md:text-base ${isDarkMode ? 'bg-zinc-800 border-white text-white' : 'bg-gray-100 border-black text-black'}`}>
                 Awaiting community verification...
               </div>
             </div>
           )
-        ) : issue.upvote_count < ESCALATION_THRESHOLD ? (
-          <div className={`border-t-4 pt-6 ${isDarkMode ? 'border-white' : 'border-black'}`}>
-            <div className={`border-4 p-4 text-center font-mono font-bold text-xs md:text-sm tracking-tight ${isDarkMode ? 'bg-zinc-900 border-white text-white' : 'bg-white border-black text-black'}`}>
-              ESCALATION SUITE UNLOCKS AT {ESCALATION_THRESHOLD} UPVOTES (CURRENT: {issue.upvote_count})
-            </div>
-          </div>
-        ) : !isEscalatedGenerated ? (
-          <div className={`border-t-4 pt-6 ${isDarkMode ? 'border-white' : 'border-black'}`}>
-            <button
-              onClick={() => setIsEscalatedGenerated(true)}
-              className={`w-full text-sm md:text-base font-black border-4 py-3 uppercase tracking-wider transition-all active:translate-x-0 active:translate-y-0 ${isDarkMode ? 'bg-white text-black border-white shadow-[4px_4px_0px_0px_rgba(255,255,255,0.3)] hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[6px_6px_0px_0px_rgba(255,255,255,1)] hover:bg-zinc-900 hover:text-white' : 'bg-black text-white border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.3)] hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:bg-white hover:text-black'}`}
-            >
-              GENERATE ESCALATION SUITE
-            </button>
-          </div>
-        ) : issue.escalation_data ? (
+        ) : (
           <div className={`border-t-4 pt-6 flex flex-col gap-6 ${isDarkMode ? 'border-white' : 'border-black'}`}>
-            <h2 className="text-xl md:text-2xl font-black uppercase flex items-center gap-2">
-              <AlertTriangle size={24} strokeWidth={3} className="shrink-0" /> CIVIC ACTION SUITE
-            </h2>
-
-            {/* Action Area A: Formal Mailer */}
-            <div className={`border-4 p-4 flex flex-col gap-4 ${isDarkMode ? 'bg-zinc-900 border-white shadow-[6px_6px_0px_0px_rgba(255,255,255,1)]' : 'bg-white border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]'}`}>
-              <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-2 md:gap-0">
-                <h3 className="font-black uppercase flex items-center gap-2 text-base md:text-lg"><Mail size={20} strokeWidth={3} /> FORMAL MAILER</h3>
-                <button
-                  onClick={() => navigator.clipboard.writeText(issue.escalation_data.formal_complaint)}
-                  className={`border-2 px-2 py-1 font-black uppercase transition-all flex items-center justify-center gap-1 text-xs md:text-sm ${isDarkMode ? 'border-white bg-zinc-800 text-white hover:-translate-y-0.5 hover:-translate-x-0.5 hover:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)] hover:bg-white hover:text-black' : 'border-black bg-gray-100 text-black hover:-translate-y-0.5 hover:-translate-x-0.5 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-black hover:text-white'}`}
-                >
-                  <Copy size={16} strokeWidth={3} /> COPY
-                </button>
-              </div>
-              <textarea
-                readOnly
-                className={`p-3 font-mono text-xs md:text-sm border-2 w-full resize-none focus:outline-none ${isDarkMode ? 'bg-zinc-900 border-white text-gray-300' : 'bg-white border-black text-black'}`}
-                rows="6"
-                value={issue.escalation_data.formal_complaint}
-              />
-              <a
-                href={`mailto:commissioner@local.gov?subject=URGENT: ${issue.category} Hazard&body=${encodeURIComponent(issue.escalation_data.formal_complaint)}`}
-                className={`border-4 px-4 py-2 text-sm md:text-base font-black uppercase text-center transition-all ${isDarkMode ? 'border-white bg-zinc-900 text-white hover:-translate-x-1 hover:-translate-y-1 hover:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] hover:bg-white hover:text-black' : 'border-black bg-white text-black hover:-translate-x-1 hover:-translate-y-1 hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:bg-black hover:text-white'}`}
-              >
-                OPEN IN EMAIL APP
-              </a>
-            </div>
-
-            {/* Action Area B: Public Social Broadcast */}
-            <div className={`border-4 p-4 flex flex-col gap-4 ${isDarkMode ? 'bg-zinc-900 border-white shadow-[6px_6px_0px_0px_rgba(255,255,255,1)]' : 'bg-white border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]'}`}>
-              <h3 className="font-black uppercase flex items-center gap-2 text-base md:text-lg"><MessageSquare size={20} strokeWidth={3} /> SOCIAL BROADCAST</h3>
-              <textarea
-                className={`p-3 font-mono text-xs md:text-sm border-2 w-full resize-none focus:outline-none ${isDarkMode ? 'bg-zinc-900 border-white text-white' : 'bg-white border-black text-black'}`}
-                rows="4"
-                defaultValue={issue.escalation_data.social_draft}
-                id="social-draft"
-              />
-              <a
-                href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(issue.escalation_data.social_draft)}`}
-                target="_blank" rel="noopener noreferrer"
-                className={`border-4 px-4 py-2 text-sm md:text-base font-black uppercase text-center transition-all ${isDarkMode ? 'border-white bg-white text-black hover:-translate-x-1 hover:-translate-y-1 hover:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] hover:bg-zinc-900 hover:text-white' : 'border-black bg-black text-white hover:-translate-x-1 hover:-translate-y-1 hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:bg-white hover:text-black'}`}
-              >
-                POST ON X (TWITTER)
-              </a>
-            </div>
-
-            {/* Share Canvas CTA */}
             <button
-              onClick={generateAndShareCard}
-              className={`mt-2 border-4 px-4 py-3 md:py-4 font-black uppercase flex flex-col md:flex-row items-center justify-center gap-2 transition-all text-base md:text-xl tracking-tight w-full ${isDarkMode ? 'border-white bg-zinc-900 text-white shadow-[8px_8px_0px_0px_rgba(255,255,255,1)] hover:-translate-x-1 hover:-translate-y-1 hover:shadow-[12px_12px_0px_0px_rgba(255,255,255,1)] hover:bg-white hover:text-black' : 'border-black bg-white text-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] hover:-translate-x-1 hover:-translate-y-1 hover:shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] hover:bg-black hover:text-white'}`}
+              onClick={() => setIsEscalatedGenerated(!isEscalatedGenerated)}
+              className="flex justify-between items-center w-full focus:outline-none group gap-2"
             >
-              <Share2 size={24} strokeWidth={3} className="shrink-0" />
-              GENERATE & SHARE IMPACT CARD
+              <h2 className="text-lg sm:text-xl md:text-2xl font-black uppercase flex items-center gap-2 group-hover:opacity-80 transition-opacity text-left">
+                <AlertTriangle size={24} strokeWidth={3} className="shrink-0" /> CIVIC ACTION SUITE
+              </h2>
+              {isEscalatedGenerated ? <ChevronUp size={24} strokeWidth={3} className="shrink-0" /> : <ChevronDown size={24} strokeWidth={3} className="shrink-0" />}
             </button>
+
+            {isEscalatedGenerated && (
+              <>
+                {/* Action Area A: Formal Mailer */}
+                <div className={`border-4 p-4 flex flex-col gap-4 ${isDarkMode ? 'bg-zinc-900 border-white shadow-[6px_6px_0px_0px_rgba(255,255,255,1)]' : 'bg-white border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]'}`}>
+                  <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-2 md:gap-0">
+                    <h3 className="font-black uppercase flex items-center gap-2 text-base md:text-lg"><Mail size={20} strokeWidth={3} /> FORMAL MAILER</h3>
+                    <button
+                      onClick={() => navigator.clipboard.writeText(issue.escalation_data?.formal_complaint || generateFormalLetter())}
+                      className={`border-2 px-2 py-1 font-black uppercase transition-all flex items-center justify-center gap-1 text-xs md:text-sm ${isDarkMode ? 'border-white bg-zinc-800 text-white hover:-translate-y-0.5 hover:-translate-x-0.5 hover:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)] hover:bg-white hover:text-black' : 'border-black bg-gray-100 text-black hover:-translate-y-0.5 hover:-translate-x-0.5 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-black hover:text-white'}`}
+                    >
+                      <Copy size={16} strokeWidth={3} /> COPY
+                    </button>
+                  </div>
+                  <textarea
+                    readOnly
+                    className={`p-3 font-mono text-xs md:text-sm border-2 w-full resize-none focus:outline-none ${isDarkMode ? 'bg-zinc-900 border-white text-gray-300' : 'bg-white border-black text-black'}`}
+                    rows="6"
+                    value={issue.escalation_data?.formal_complaint || generateFormalLetter()}
+                  />
+                  <a
+                    href={`mailto:commissioner@local.gov?subject=URGENT: ${issue.category} Hazard&body=${encodeURIComponent(issue.escalation_data?.formal_complaint || generateFormalLetter())}`}
+                    className={`border-4 px-4 py-2 text-sm md:text-base font-black uppercase text-center transition-all ${isDarkMode ? 'border-white bg-zinc-900 text-white hover:-translate-x-1 hover:-translate-y-1 hover:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] hover:bg-white hover:text-black' : 'border-black bg-white text-black hover:-translate-x-1 hover:-translate-y-1 hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:bg-black hover:text-white'}`}
+                  >
+                    OPEN IN EMAIL APP
+                  </a>
+                </div>
+
+                {/* Action Area B: Public Social Broadcast */}
+                <div className={`border-4 p-4 flex flex-col gap-4 ${isDarkMode ? 'bg-zinc-900 border-white shadow-[6px_6px_0px_0px_rgba(255,255,255,1)]' : 'bg-white border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]'}`}>
+                  <h3 className="font-black uppercase flex items-center gap-2 text-base md:text-lg"><MessageSquare size={20} strokeWidth={3} /> SOCIAL BROADCAST</h3>
+                  <textarea
+                    className={`p-3 font-mono text-xs md:text-sm border-2 w-full resize-none focus:outline-none ${isDarkMode ? 'bg-zinc-900 border-white text-white' : 'bg-white border-black text-black'}`}
+                    rows="4"
+                    defaultValue={issue.escalation_data?.social_draft || `Hazard detected! Critical ${issue.category} at ${issue.location_name || `${issue.latitude.toFixed(4)}, ${issue.longitude.toFixed(4)}`}. Verified by community. Please fix immediately! #CivicAction #Accountability\n\nView details: ${window.location.origin}/detail/${issue.id || issueId}`}
+                    id="social-draft"
+                  />
+                  <a
+                    onClick={(e) => {
+                      e.preventDefault();
+                      const draft = document.getElementById('social-draft').value;
+                      window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(draft)}`, '_blank');
+                    }}
+                    href="#"
+                    className={`border-4 px-4 py-2 text-sm md:text-base font-black uppercase text-center transition-all ${isDarkMode ? 'border-white bg-white text-black hover:-translate-x-1 hover:-translate-y-1 hover:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] hover:bg-zinc-900 hover:text-white' : 'border-black bg-black text-white hover:-translate-x-1 hover:-translate-y-1 hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:bg-white hover:text-black'}`}
+                  >
+                    POST ON X (TWITTER)
+                  </a>
+                </div>
+
+                {/* Share Canvas CTA */}
+                <button
+                  onClick={generateAndShareCard}
+                  className={`mt-2 border-4 px-4 py-3 md:py-4 font-black uppercase flex flex-col md:flex-row items-center justify-center gap-2 transition-all text-base md:text-xl tracking-tight w-full ${isDarkMode ? 'border-white bg-zinc-900 text-white shadow-[8px_8px_0px_0px_rgba(255,255,255,1)] hover:-translate-x-1 hover:-translate-y-1 hover:shadow-[12px_12px_0px_0px_rgba(255,255,255,1)] hover:bg-white hover:text-black' : 'border-black bg-white text-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] hover:-translate-x-1 hover:-translate-y-1 hover:shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] hover:bg-black hover:text-white'}`}
+                >
+                  <Share2 size={24} strokeWidth={3} className="shrink-0" />
+                  GENERATE & SHARE IMPACT CARD
+                </button>
+              </>
+            )}
           </div>
-        ) : null}
+        )}
       </div>
 
       {/* SOP Guide & Formal Letter Generator */}
-      <div className={`border-4 p-4 md:p-8 flex flex-col gap-6 ${isDarkMode ? 'border-white bg-zinc-900 shadow-[6px_6px_0px_0px_rgba(255,255,255,1)]' : 'border-black bg-yellow-50 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]'}`}>
+      {!isUnderProcess && !isSolved && (
+        <div className={`border-4 p-4 md:p-8 flex flex-col gap-6 ${isDarkMode ? 'border-white bg-zinc-900 shadow-[6px_6px_0px_0px_rgba(255,255,255,1)]' : 'border-black bg-yellow-50 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]'}`}>
         <button
           onClick={() => setIsSopOpen(!isSopOpen)}
           className="flex justify-between items-center w-full focus:outline-none group gap-2"
@@ -516,6 +547,7 @@ Contact/Email: ${contact}`;
           </>
         )}
       </div>
+      )}
 
       {/* Image Modal */}
       {modalImageSrc && (

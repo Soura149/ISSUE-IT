@@ -22,6 +22,8 @@ const SubmissionForm = ({ userLocation, onComplete, isDarkMode }) => {
   const [photoUrl, setPhotoUrl] = useState(null);
   const [processing, setProcessing] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(false);
   const [duplicateThreat, setDuplicateThreat] = useState(null);
   const [formData, setFormData] = useState({
     locationName: '',
@@ -74,6 +76,8 @@ const SubmissionForm = ({ userLocation, onComplete, isDarkMode }) => {
       return;
     }
     setSubmitting(true);
+    setError(null);
+    setSuccess(false);
     try {
       // Deduplication Check
       const DRIFT_RADIUS_THRESHOLD_METERS = 100;
@@ -123,10 +127,13 @@ const SubmissionForm = ({ userLocation, onComplete, isDarkMode }) => {
         ai_description: formData.description, // in real app, might be distinct
         photo_url: finalPhotoUrl || "https://images.unsplash.com/photo-1515162816999-a0c47dc192f7?auto=format&fit=crop&q=80&w=400", // fallback demo
       });
-      onComplete(); // Go back to feed
-    } catch (error) {
-      console.error("Failed to submit", error);
-    } finally {
+      setSuccess(true);
+      setTimeout(() => {
+        onComplete(); // Go back to feed
+      }, 1500);
+    } catch (err) {
+      console.error("Failed to submit", err);
+      setError(err.message || "Failed to publish issue. Please check your connection and try again.");
       setSubmitting(false);
     }
   };
@@ -134,6 +141,19 @@ const SubmissionForm = ({ userLocation, onComplete, isDarkMode }) => {
   return (
     <div className={`w-full max-w-2xl mx-auto px-4 box-border flex flex-col gap-6 relative ${isDarkMode ? 'text-white' : 'text-black'}`}>
       
+      {error && (
+        <div className="border-4 border-black bg-red-500 text-white p-4 font-mono font-bold shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:border-white uppercase z-10">
+          {error}
+        </div>
+      )}
+      
+      {success && (
+        <div className="border-4 border-black bg-[#00FF66] text-black p-4 font-mono font-bold shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:border-white uppercase z-10 flex items-center justify-between">
+          <span>ISSUE SUCCESSFULLY POSTED! REDIRECTING TO FEED...</span>
+          <div className="spinner border-black"></div>
+        </div>
+      )}
+
       {duplicateThreat && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
           <div className="border-4 border-black bg-yellow-300 text-black p-4 font-mono font-bold shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:border-white max-w-md w-full relative">

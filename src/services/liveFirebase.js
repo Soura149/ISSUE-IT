@@ -1,4 +1,4 @@
-import { collection, doc, getDocs, getDoc, setDoc, runTransaction, increment } from 'firebase/firestore';
+import { collection, doc, getDocs, getDoc, setDoc, runTransaction, increment, deleteDoc } from 'firebase/firestore';
 import { auth, db } from './firebaseConfig';
 import { GoogleGenAI } from '@google/genai';
 
@@ -67,12 +67,20 @@ export const calculateDistance = (lat1, lon1, lat2, lon2) => {
   return R * c; // in metres
 };
 
+// Helper to heal old issues that met the new threshold of 1 vouch
+const healIssue = (issue) => {
+  if (issue.status === 'UNDER_PROCESS' && (issue.verification_upvotes || 0) >= 1) {
+    return { ...issue, status: 'SOLVED' };
+  }
+  return issue;
+};
+
 // Phase 1: Firestore Collections
 export const getIssues = async () => {
   const querySnapshot = await getDocs(collection(db, "issues"));
   const issues = [];
   querySnapshot.forEach((docSnap) => {
-    issues.push({ id: docSnap.id, ...docSnap.data() });
+    issues.push(healIssue({ id: docSnap.id, ...docSnap.data() }));
   });
   return issues;
 };
@@ -81,7 +89,7 @@ export const getIssue = async (id) => {
   const docRef = doc(db, "issues", id);
   const docSnap = await getDoc(docRef);
   if (docSnap.exists()) {
-    return { id: docSnap.id, ...docSnap.data() };
+    return healIssue({ id: docSnap.id, ...docSnap.data() });
   } else {
     return null;
   }
@@ -93,7 +101,7 @@ export const getUserIssues = async (uid) => {
   querySnapshot.forEach((docSnap) => {
     const data = docSnap.data();
     if (data.reporter_session_id === uid) {
-      issues.push({ id: docSnap.id, ...data });
+      issues.push(healIssue({ id: docSnap.id, ...data }));
     }
   });
   return issues;
@@ -122,6 +130,16 @@ export const createIssue = async (issueData) => {
 
   return { id: newIssueRef.id, ...newIssue };
 };
+
+export const deleteIssue = async (issueId) => {
+  const user = auth.currentUser;
+  if (user?.email !== import.meta.env.VITE_ADMIN_EMAIL) {
+    throw new Error("Unauthorized: Admin privileges required to delete issues.");
+  }
+  const issueRef = doc(db, "issues", issueId);
+  await deleteDoc(issueRef);
+};
+
 
 // Convert File to base64 for Gemini
 const fileToGenerativePart = async (file) => {
@@ -218,7 +236,7 @@ export const upvoteIssue = async (issueId, userLat, userLon) => {
         newStatus = "escalated";
         escalationData = {
           formal_complaint: `To the Municipal Commissioner,\n\nWe urgently bring to your attention a ${issue.category} at coordinates (${issue.latitude}, ${issue.longitude}). This hazard has been formally co-signed and verified by local residents. Immediate structural intervention is demanded to prevent further risk to public safety.\n\nSincerely,\nConcerned Citizens`,
-          social_draft: ` Immediate hazard detected! Critical ${issue.category} at ${issue.latitude.toFixed(4)}, ${issue.longitude.toFixed(4)}. Verified by community. @MunicipalCorp please fix immediately! #CivicAction #Accountability`
+          social_draft: `Immediate hazard detected! Critical ${issue.category} at ${issue.latitude.toFixed(4)}, ${issue.longitude.toFixed(4)}. Verified by community. Please fix immediately! #CivicAction #Accountability\n\nView details: ${window.location.origin}/detail/${issueId}`
         };
       }
 
@@ -264,9 +282,9 @@ export const submitResolutionProof = async (issueId, imageUrl) => {
       const issue = issueDoc.data();
 
       const issueUpdates = {
-        status: "UNDER_PROCESS",
+        status: "SOLVED",
         resolved_image_url: imageUrl,
-        verification_upvotes: 0
+        verification_upvotes: 1
       };
       
       transaction.update(issueRef, issueUpdates);
@@ -295,11 +313,6 @@ export const vouchForResolution = async (issueId) => {
 
   try {
     const updatedIssueData = await runTransaction(db, async (transaction) => {
-      const vouchDoc = await transaction.get(vouchRef);
-      if (vouchDoc.exists()) {
-        throw new Error("Already vouched for this resolution");
-      }
-
       const issueDoc = await transaction.get(issueRef);
       if (!issueDoc.exists()) {
         throw new Error("Issue not found");
@@ -311,26 +324,33 @@ export const vouchForResolution = async (issueId) => {
         throw new Error("You cannot vouch for your own resolution.");
       }
 
-      if (issue.status !== "UNDER_PROCESS") {
-        throw new Error("Issue is not under verification process.");
+      const vouchDoc = await transaction.get(vouchRef);
+      const isVouching = !vouchDoc.exists();
+
+      let newVerificationUpvotes = issue.verification_upvotes || 0;
+      if (isVouching) {
+        newVerificationUpvotes += 1;
+        transaction.set(vouchRef, {
+          issue_id: issueId,
+          user_id: uid,
+          timestamp: new Date().toISOString()
+        });
+      } else {
+        newVerificationUpvotes = Math.max(0, newVerificationUpvotes - 1);
+        transaction.delete(vouchRef);
       }
 
-      let newVerificationUpvotes = (issue.verification_upvotes || 0) + 1;
       let newStatus = issue.status;
-
-      if (newVerificationUpvotes >= 3) {
+      if (newVerificationUpvotes >= 1) {
         newStatus = "SOLVED";
-        if (issue.reporter_session_id) {
+        // ONLY grant XP if it transitions to SOLVED from UNDER_PROCESS
+        if (issue.status !== "SOLVED" && issue.reporter_session_id) {
           const userRef = doc(db, "users", issue.reporter_session_id);
           transaction.set(userRef, { xpPoints: increment(30) }, { merge: true });
         }
+      } else if (newVerificationUpvotes < 1) {
+        newStatus = "UNDER_PROCESS";
       }
-
-      transaction.set(vouchRef, {
-        issue_id: issueId,
-        user_id: uid,
-        timestamp: new Date().toISOString()
-      });
 
       const issueUpdates = {
         verification_upvotes: newVerificationUpvotes,
@@ -338,11 +358,20 @@ export const vouchForResolution = async (issueId) => {
       };
       
       transaction.update(issueRef, issueUpdates);
-      return { id: issueId, ...issue, ...issueUpdates };
+      return { id: issueId, ...issue, ...issueUpdates, hasVouchedNow: isVouching };
     });
 
     return updatedIssueData;
   } catch (error) {
     throw error;
   }
+};
+
+export const checkHasVouched = async (issueId) => {
+  const uid = getSessionId();
+  if (!uid) return false;
+  const vouchId = `${issueId}_vouch_${uid}`;
+  const vouchRef = doc(db, "upvotes", vouchId);
+  const snap = await getDoc(vouchRef);
+  return snap.exists();
 };

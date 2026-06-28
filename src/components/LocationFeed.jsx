@@ -29,8 +29,13 @@ const LocationFeed = ({ userLocation, onSelectIssue, isDarkMode, session }) => {
       
       if (userLocation) {
         let displayIssues = allIssues;
+        
+        if (feedType !== 'resolved') {
+          displayIssues = displayIssues.filter(issue => issue.status !== 'SOLVED');
+        }
+
         if (feedType === 'local') {
-          displayIssues = allIssues.filter(issue => {
+          displayIssues = displayIssues.filter(issue => {
             const issueLocality = String(issue.reportedLocality || issue.location_name || issue.locationName || '').toLowerCase().trim();
             const userLocality = String(currentUserProfile?.localArea || '').toLowerCase().trim();
             const issuePin = String(issue.reportedPIN || '').trim();
@@ -52,7 +57,9 @@ const LocationFeed = ({ userLocation, onSelectIssue, isDarkMode, session }) => {
             return dist <= 1000;
           });
         } else if (feedType === 'process') {
-          displayIssues = allIssues.filter(issue => issue.status === 'UNDER_PROCESS');
+          displayIssues = displayIssues.filter(issue => issue.status === 'UNDER_PROCESS');
+        } else if (feedType === 'resolved') {
+          displayIssues = allIssues.filter(issue => issue.status === 'SOLVED');
         }
         
         displayIssues.sort((a, b) => {
@@ -135,6 +142,14 @@ const LocationFeed = ({ userLocation, onSelectIssue, isDarkMode, session }) => {
           >
             IN PROCESS
           </button>
+          <button
+            onClick={() => setFeedType('resolved')}
+            className={feedType === 'resolved' 
+              ? `px-3 py-2 border-4 font-black uppercase text-xs tracking-tight bg-[#00FF66] text-black border-black`
+              : `px-3 py-2 border-4 font-black uppercase text-xs tracking-tight hover:-translate-y-0.5 transition-all ${isDarkMode ? 'bg-zinc-900 text-white border-white shadow-[2px_2px_0px_0px_rgba(255,255,255,1)] hover:bg-[#00FF66] hover:text-black hover:border-black' : 'bg-white text-black border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-[#00FF66] hover:text-black'}`}
+          >
+            RESOLVED
+          </button>
         </div>
       </div>
 
@@ -180,11 +195,6 @@ const LocationFeed = ({ userLocation, onSelectIssue, isDarkMode, session }) => {
                     <span className={`font-mono text-[10px] font-bold uppercase border-2 px-2 py-0.5 ${isDarkMode ? 'border-white bg-zinc-900 text-white' : 'border-black bg-white text-black'}`}>
                       UPVOTES: {issue.upvote_count}
                     </span>
-                    {userLocation && (
-                      <span className={`font-mono text-[10px] font-bold uppercase border-2 px-2 py-0.5 flex items-center gap-1 ${isDarkMode ? 'border-white bg-zinc-900 text-white' : 'border-black bg-white text-black'}`}>
-                        <MapPin size={12} strokeWidth={3} /> {Math.round(calculateDistance(userLocation.latitude, userLocation.longitude, issue.latitude, issue.longitude))}M AWAY
-                      </span>
-                    )}
                   </div>
                 </div>
               );
@@ -239,11 +249,6 @@ const LocationFeed = ({ userLocation, onSelectIssue, isDarkMode, session }) => {
                     <span className={`font-mono text-[10px] font-bold uppercase border-2 px-2 py-0.5 ${isDarkMode ? 'border-white bg-zinc-900 text-white' : 'border-black bg-white text-black'}`}>
                       UPVOTES: {issue.upvote_count}
                     </span>
-                    {userLocation && (
-                      <span className={`font-mono text-[10px] font-bold uppercase border-2 px-2 py-0.5 flex items-center gap-1 ${isDarkMode ? 'border-white bg-zinc-900 text-white' : 'border-black bg-white text-black'}`}>
-                        <MapPin size={12} strokeWidth={3} /> {Math.round(calculateDistance(userLocation.latitude, userLocation.longitude, issue.latitude, issue.longitude))}M AWAY
-                      </span>
-                    )}
                   </div>
                 </div>
               </div>
