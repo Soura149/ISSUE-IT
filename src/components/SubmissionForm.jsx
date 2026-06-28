@@ -26,12 +26,13 @@ const SubmissionForm = ({ userLocation, onComplete, isDarkMode }) => {
   const [success, setSuccess] = useState(false);
   const [duplicateThreat, setDuplicateThreat] = useState(null);
   const [formData, setFormData] = useState({
-    locationName: '',
     category: '',
-    severity: '',
+    severity: 'medium',
     description: '',
+    locationName: '',
     reportedLocality: '',
-    reportedPIN: ''
+    reportedPIN: '',
+    targetVouchesRequired: 3,
   });
   
   const fileInputRef = useRef(null);
@@ -328,6 +329,21 @@ const SubmissionForm = ({ userLocation, onComplete, isDarkMode }) => {
             <option value="waste">WASTE</option>
             <option value="other">OTHER</option>
           </select>
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <label className="font-black uppercase text-xl text-[#FF0055] dark:text-[#00FF66]">🎯 REQUIRED NEIGHBORHOOD VOUCHES</label>
+          <input 
+            type="number" 
+            min="1" 
+            max="15" 
+            value={formData.targetVouchesRequired}
+            onChange={(e) => setFormData({...formData, targetVouchesRequired: parseInt(e.target.value, 10) || 3})}
+            className={`w-full box-border p-3 font-mono text-xl border-2 sm:border-4 font-black focus:outline-none transition-all ${isDarkMode ? 'bg-zinc-900 border-white text-[#00FF66] focus:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]' : 'bg-white border-black text-[#FF0055] focus:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]'}`}
+          />
+          <p className={`font-mono text-xs font-bold italic mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+            *Set a lower target if your local area is sparsely populated or rural.*
+          </p>
         </div>
 
         <div className="flex flex-col gap-2">

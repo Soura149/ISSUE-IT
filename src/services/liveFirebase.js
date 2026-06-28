@@ -114,6 +114,7 @@ export const createIssue = async (issueData) => {
   const newIssue = {
     ...issueData,
     location_name: issueData.locationName || 'Unknown Location',
+    targetVouchesRequired: issueData.targetVouchesRequired || 3,
     upvote_count: 1,
     status: "OPEN",
     reporter_session_id: reporterId,
@@ -367,7 +368,8 @@ export const upvoteIssue = async (issueId, userLat, userLon) => {
         });
 
         // Escalation Engine Trigger
-        if (newUpvoteCount >= 5 && newStatus !== "escalated") { // Demo threshold = 5
+        const threshold = issue.targetVouchesRequired || 5;
+        if (newUpvoteCount >= threshold && newStatus !== "escalated") {
           newStatus = "escalated";
           escalationData = {
             formal_complaint: `To the Municipal Commissioner,\n\nWe urgently bring to your attention a ${issue.category} at coordinates (${issue.latitude}, ${issue.longitude}). This hazard has been formally co-signed and verified by local residents. Immediate structural intervention is demanded to prevent further risk to public safety.\n\nSincerely,\nConcerned Citizens`,
