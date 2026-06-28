@@ -132,7 +132,7 @@ const SubmissionForm = ({ userLocation, onComplete, isDarkMode }) => {
   };
 
   return (
-    <div className={`flex flex-col gap-6 relative ${isDarkMode ? 'text-white' : 'text-black'}`}>
+    <div className={`w-full max-w-2xl mx-auto px-4 box-border flex flex-col gap-6 relative ${isDarkMode ? 'text-white' : 'text-black'}`}>
       
       {duplicateThreat && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
@@ -202,11 +202,11 @@ const SubmissionForm = ({ userLocation, onComplete, isDarkMode }) => {
               </div>
             </div>
           ) : (
-            <div className="flex flex-col items-center gap-6 z-10">
-              <div className="flex flex-wrap justify-center gap-4">
+            <div className="flex flex-col items-center gap-6 z-10 w-full px-2">
+              <div className="flex flex-col sm:flex-row w-full justify-center gap-4">
                 <button 
                   type="button" 
-                  className={`border-4 px-4 py-2 font-black uppercase flex items-center gap-2 transition-all ${isDarkMode ? 'border-white bg-zinc-900 text-white shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] hover:-translate-x-1 hover:-translate-y-1 hover:shadow-[8px_8px_0px_0px_rgba(255,255,255,1)] hover:bg-white hover:text-black' : 'border-black bg-white text-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:-translate-x-1 hover:-translate-y-1 hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]'}`}
+                  className={`w-full box-border border-2 sm:border-4 p-3 font-mono text-sm font-black uppercase flex items-center justify-center gap-2 transition-all ${isDarkMode ? 'border-white bg-zinc-900 text-white shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] hover:-translate-x-1 hover:-translate-y-1 hover:shadow-[8px_8px_0px_0px_rgba(255,255,255,1)] hover:bg-white hover:text-black' : 'border-black bg-white text-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:-translate-x-1 hover:-translate-y-1 hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]'}`}
                   onClick={() => cameraInputRef.current.click()}
                 >
                   <Camera size={24} strokeWidth={3} />
@@ -214,7 +214,7 @@ const SubmissionForm = ({ userLocation, onComplete, isDarkMode }) => {
                 </button>
                 <button 
                   type="button" 
-                  className={`border-4 px-4 py-2 font-black uppercase flex items-center gap-2 transition-all ${isDarkMode ? 'border-white bg-zinc-900 text-white shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] hover:-translate-x-1 hover:-translate-y-1 hover:shadow-[8px_8px_0px_0px_rgba(255,255,255,1)] hover:bg-white hover:text-black' : 'border-black bg-white text-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:-translate-x-1 hover:-translate-y-1 hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]'}`}
+                  className={`w-full box-border border-2 sm:border-4 p-3 font-mono text-sm font-black uppercase flex items-center justify-center gap-2 transition-all ${isDarkMode ? 'border-white bg-zinc-900 text-white shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] hover:-translate-x-1 hover:-translate-y-1 hover:shadow-[8px_8px_0px_0px_rgba(255,255,255,1)] hover:bg-white hover:text-black' : 'border-black bg-white text-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:-translate-x-1 hover:-translate-y-1 hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]'}`}
                   onClick={() => fileInputRef.current.click()}
                 >
                   <Upload size={24} strokeWidth={3} />
@@ -247,7 +247,7 @@ const SubmissionForm = ({ userLocation, onComplete, isDarkMode }) => {
           <label className="font-black uppercase text-xl">Location Landmark</label>
           <input 
             type="text" 
-            className={`w-full p-3 font-mono text-sm border-4 font-bold focus:outline-none mb-4 ${isDarkMode ? 'bg-zinc-900 border-white text-white focus:bg-zinc-800 placeholder-gray-400' : 'bg-white border-black text-black focus:bg-yellow-50 placeholder-gray-500'}`}
+            className={`w-full box-border p-3 font-mono text-sm border-2 sm:border-4 font-bold focus:outline-none mb-4 ${isDarkMode ? 'bg-zinc-900 border-white text-white focus:bg-zinc-800 placeholder-gray-400' : 'bg-white border-black text-black focus:bg-yellow-50 placeholder-gray-500'}`}
             placeholder="e.g. Near Sector 5 Metro Station"
             value={formData.locationName}
             onChange={e => setFormData({...formData, locationName: e.target.value})}
@@ -258,7 +258,7 @@ const SubmissionForm = ({ userLocation, onComplete, isDarkMode }) => {
               <label className="font-bold uppercase text-sm">Local Area / Neighborhood</label>
               <input 
                 type="text" 
-                className={`w-full p-3 font-mono text-sm border-4 font-bold focus:outline-none ${isDarkMode ? 'bg-zinc-900 border-white text-white focus:bg-zinc-800 placeholder-gray-400' : 'bg-white border-black text-black focus:bg-yellow-50 placeholder-gray-500'}`}
+                className={`w-full box-border p-3 font-mono text-sm border-2 sm:border-4 font-bold focus:outline-none ${isDarkMode ? 'bg-zinc-900 border-white text-white focus:bg-zinc-800 placeholder-gray-400' : 'bg-white border-black text-black focus:bg-yellow-50 placeholder-gray-500'}`}
                 placeholder="e.g. Salt Lake Sector 5"
                 value={formData.reportedLocality}
                 onChange={e => setFormData({...formData, reportedLocality: e.target.value})}
@@ -268,7 +268,7 @@ const SubmissionForm = ({ userLocation, onComplete, isDarkMode }) => {
               <label className="font-bold uppercase text-sm">PIN Code / Postal Code</label>
               <input 
                 type="text" 
-                className={`w-full p-3 font-mono text-sm border-4 font-bold focus:outline-none ${isDarkMode ? 'bg-zinc-900 border-white text-white focus:bg-zinc-800 placeholder-gray-400' : 'bg-white border-black text-black focus:bg-yellow-50 placeholder-gray-500'}`}
+                className={`w-full box-border p-3 font-mono text-sm border-2 sm:border-4 font-bold focus:outline-none ${isDarkMode ? 'bg-zinc-900 border-white text-white focus:bg-zinc-800 placeholder-gray-400' : 'bg-white border-black text-black focus:bg-yellow-50 placeholder-gray-500'}`}
                 placeholder="e.g. 700091"
                 value={formData.reportedPIN}
                 onChange={e => setFormData({...formData, reportedPIN: e.target.value})}

@@ -147,7 +147,7 @@ function App() {
       )}
 
       {/* Hamburger Sidebar Drawer */}
-      <div className={`fixed top-0 left-0 h-full w-72 sm:w-80 ${isDarkMode ? 'bg-zinc-900 border-white shadow-[8px_0px_0px_0px_rgba(255,255,255,1)]' : 'bg-white border-black shadow-[8px_0px_0px_0px_rgba(0,0,0,1)]'} border-r-4 z-50 transform transition-transform duration-300 flex flex-col justify-between ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+      <div className={`fixed top-0 left-0 h-full w-[85vw] sm:w-[320px] md:w-64 ${isDarkMode ? 'bg-neutral-900 border-white shadow-[8px_0px_0px_0px_rgba(255,255,255,1)]' : 'bg-white border-black shadow-[8px_0px_0px_0px_rgba(0,0,0,1)]'} border-r-4 z-50 transform transition-transform duration-300 flex flex-col justify-between ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         <div>
           {/* Header */}
           <div className={`p-4 border-b-4 ${isDarkMode ? 'border-white bg-zinc-900' : 'border-black bg-white'} flex justify-between items-center`}>
@@ -164,31 +164,31 @@ function App() {
           <div className="flex flex-col">
             <button 
               onClick={() => navigateToPage('/feed')}
-              className={`font-mono text-xl text-left font-black p-4 border-b-2 uppercase transition-all duration-150 cursor-pointer truncate hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-y-0.5 active:translate-x-0.5 ${isDarkMode ? 'border-white hover:bg-white hover:text-black' : 'border-black hover:bg-black hover:text-white'}`}
+              className={`w-full text-left font-mono font-black text-sm sm:text-base p-4 border-b-2 uppercase transition-all duration-150 cursor-pointer hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-y-0.5 active:translate-x-0.5 ${isDarkMode ? 'border-white hover:bg-white hover:text-black' : 'border-black hover:bg-black hover:text-white'}`}
             >
               FEEDS DASHBOARD
             </button>
             <button 
               onClick={() => navigateToPage('/post')}
-              className={`font-mono text-xl text-left font-black p-4 border-b-2 uppercase transition-all duration-150 cursor-pointer truncate hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-y-0.5 active:translate-x-0.5 ${isDarkMode ? 'border-white hover:bg-white hover:text-black' : 'border-black hover:bg-black hover:text-white'}`}
+              className={`w-full text-left font-mono font-black text-sm sm:text-base p-4 border-b-2 uppercase transition-all duration-150 cursor-pointer hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-y-0.5 active:translate-x-0.5 ${isDarkMode ? 'border-white hover:bg-white hover:text-black' : 'border-black hover:bg-black hover:text-white'}`}
             >
               POST AN ISSUE
             </button>
             <button 
               onClick={() => navigateToPage('/leaderboard')}
-              className={`font-mono text-xl text-left font-black p-4 border-b-2 uppercase transition-all duration-150 cursor-pointer truncate hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-y-0.5 active:translate-x-0.5 ${isDarkMode ? 'border-white hover:bg-white hover:text-black' : 'border-black hover:bg-black hover:text-white'}`}
+              className={`w-full text-left font-mono font-black text-sm sm:text-base p-4 border-b-2 uppercase transition-all duration-150 cursor-pointer hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-y-0.5 active:translate-x-0.5 ${isDarkMode ? 'border-white hover:bg-white hover:text-black' : 'border-black hover:bg-black hover:text-white'}`}
             >
               LEADERBOARD RANKINGS
             </button>
             <button 
               onClick={() => navigateToPage('/profile')}
-              className={`font-mono text-xl text-left font-black p-4 border-b-2 uppercase transition-all duration-150 cursor-pointer truncate hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-y-0.5 active:translate-x-0.5 ${isDarkMode ? 'border-white hover:bg-white hover:text-black' : 'border-black hover:bg-black hover:text-white'}`}
+              className={`w-full text-left font-mono font-black text-sm sm:text-base p-4 border-b-2 uppercase transition-all duration-150 cursor-pointer hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-y-0.5 active:translate-x-0.5 ${isDarkMode ? 'border-white hover:bg-white hover:text-black' : 'border-black hover:bg-black hover:text-white'}`}
             >
               PROFILE INFO
             </button>
             <button 
               onClick={() => setIsDarkMode(!isDarkMode)}
-              className={`font-mono text-xl text-left font-black p-4 border-b-2 uppercase transition-all duration-150 cursor-pointer truncate hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-y-0.5 active:translate-x-0.5 ${isDarkMode ? 'border-white hover:bg-white hover:text-black' : 'border-black hover:bg-black hover:text-white'}`}
+              className={`w-full text-left font-mono font-black text-sm sm:text-base p-4 border-b-2 uppercase transition-all duration-150 cursor-pointer hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-y-0.5 active:translate-x-0.5 ${isDarkMode ? 'border-white hover:bg-white hover:text-black' : 'border-black hover:bg-black hover:text-white'}`}
             >
               TOGGLE THEME
             </button>

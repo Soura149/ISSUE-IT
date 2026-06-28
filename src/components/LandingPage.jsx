@@ -18,15 +18,13 @@ const LandingPage = ({ onLogin, isDarkMode, setIsDarkMode }) => {
               IT
             </span>
           </div>
-          <div className="flex items-center gap-6 font-mono font-bold text-xs uppercase">
-            <button className="hidden md:block hover:underline transition-all active:translate-y-1">Community</button>
-            <button className="hidden md:block hover:underline transition-all active:translate-y-1">Manifesto</button>
+          <div className="flex items-center gap-6 font-mono font-black text-sm md:text-lg uppercase tracking-wider text-black dark:text-white">
             <button onClick={() => setIsDarkMode(!isDarkMode)} className="hover:underline transition-all active:translate-y-1">
               {isDarkMode ? 'Light Mode' : 'Dark Mode'}
             </button>
             <button 
               onClick={onLogin}
-              className="bg-black text-white dark:bg-white dark:text-black px-5 py-3 border-2 border-transparent dark:border-black rounded-full hover:-translate-y-1 hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:hover:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] transition-all active:translate-y-0"
+              className="bg-black text-white dark:bg-white dark:text-black px-6 py-2.5 text-sm md:text-base border-2 border-transparent dark:border-black rounded-full hover:-translate-y-1 hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:hover:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] transition-all active:translate-y-0"
             >
               Enter Dashboard ↗
             </button>
@@ -282,12 +280,17 @@ const LandingPage = ({ onLogin, isDarkMode, setIsDarkMode }) => {
       </section>
 
       {/* --- Footer --- */}
-      <footer className="w-full py-12 px-6 border-t-8 border-black dark:border-white bg-black text-white dark:bg-white dark:text-black flex flex-col md:flex-row justify-between items-center font-mono font-bold text-xs uppercase gap-6">
+      <footer className="w-full py-12 px-6 border-t-8 border-black dark:border-white bg-black text-white dark:bg-white dark:text-black flex flex-col md:flex-row justify-between items-center font-mono font-black text-xs md:text-sm uppercase tracking-wider gap-6">
         <div>© 2026 ISSUE IT PROTOCOL</div>
         <div className="flex gap-4">
-          <a href="#" className="hover:underline transition-all">GitHub</a>
-          <a href="#" className="hover:underline transition-all">Docs</a>
-          <a href="#" className="hover:underline transition-all">Privacy</a>
+          <a 
+            href="https://github.com/Soura149/ISSUE-IT" 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            className="hover:text-[#FFCC00] dark:hover:text-[#00FF66] hover:underline underline-offset-4 decoration-4 transition-all"
+          >
+            GitHub
+          </a>
         </div>
       </footer>
 
