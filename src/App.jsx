@@ -14,6 +14,7 @@ function App() {
   const [userLocation, setUserLocation] = useState(null);
   const [currentView, setCurrentView] = useState('feed'); // 'feed', 'submit', 'detail'
   const [selectedIssueId, setSelectedIssueId] = useState(null);
+  const [selectedProfileId, setSelectedProfileId] = useState(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [totalIssuesCount, setTotalIssuesCount] = useState(0);
@@ -60,7 +61,8 @@ function App() {
   }, [currentView]); // Re-fetch when view changes to update counts after submission
 
   const navigate = (view, id = null) => {
-    setSelectedIssueId(id);
+    if (view === 'detail') setSelectedIssueId(id);
+    if (view === 'profile') setSelectedProfileId(id);
     setCurrentView(view);
     setIsSidebarOpen(false); // Close sidebar on navigation
   };
@@ -85,7 +87,7 @@ function App() {
   }
 
   return (
-    <div className={`${isDarkMode ? 'bg-black text-white' : 'bg-white text-black'} min-h-screen font-sans transition-colors duration-300`}>
+    <div className={`w-full min-h-screen px-2 sm:px-4 md:px-8 box-border overflow-x-hidden ${isDarkMode ? 'bg-black text-white' : 'bg-white text-black'} font-sans transition-colors duration-300`}>
       {/* Sidebar Backdrop Overlay */}
       {isSidebarOpen && (
         <div 
@@ -95,7 +97,7 @@ function App() {
       )}
 
       {/* Hamburger Sidebar Drawer */}
-      <div className={`fixed top-0 left-0 h-full w-80 ${isDarkMode ? 'bg-zinc-900 border-white' : 'bg-white border-black'} border-r-4 z-50 transform transition-transform duration-300 ${isDarkMode ? 'shadow-[8px_0px_0px_0px_rgba(255,255,255,1)]' : 'shadow-[8px_0px_0px_0px_rgba(0,0,0,1)]'} flex flex-col justify-between ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+      <div className={`fixed top-0 left-0 h-full w-72 sm:w-80 ${isDarkMode ? 'bg-zinc-900 border-white shadow-[8px_0px_0px_0px_rgba(255,255,255,1)]' : 'bg-white border-black shadow-[8px_0px_0px_0px_rgba(0,0,0,1)]'} border-r-4 z-50 transform transition-transform duration-300 flex flex-col justify-between ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         <div>
           {/* Header */}
           <div className={`p-4 border-b-4 ${isDarkMode ? 'border-white bg-zinc-900' : 'border-black bg-white'} flex justify-between items-center`}>
@@ -112,31 +114,31 @@ function App() {
           <div className="flex flex-col">
             <button 
               onClick={() => navigate('feed')}
-              className={`font-mono text-xl text-left font-black p-4 border-b-2 uppercase transition-all cursor-pointer ${isDarkMode ? 'border-white hover:bg-white hover:text-black' : 'border-black hover:bg-black hover:text-white'}`}
+              className={`font-mono text-xl text-left font-black p-4 border-b-2 uppercase transition-all cursor-pointer truncate ${isDarkMode ? 'border-white hover:bg-white hover:text-black' : 'border-black hover:bg-black hover:text-white'}`}
             >
               FEEDS DASHBOARD
             </button>
             <button 
               onClick={() => navigate('submit')}
-              className={`font-mono text-xl text-left font-black p-4 border-b-2 uppercase transition-all cursor-pointer ${isDarkMode ? 'border-white hover:bg-white hover:text-black' : 'border-black hover:bg-black hover:text-white'}`}
+              className={`font-mono text-xl text-left font-black p-4 border-b-2 uppercase transition-all cursor-pointer truncate ${isDarkMode ? 'border-white hover:bg-white hover:text-black' : 'border-black hover:bg-black hover:text-white'}`}
             >
               POST AN ISSUE
             </button>
             <button 
               onClick={() => navigate('leaderboard')}
-              className={`font-mono text-xl text-left font-black p-4 border-b-2 uppercase transition-all cursor-pointer ${isDarkMode ? 'border-white hover:bg-white hover:text-black' : 'border-black hover:bg-black hover:text-white'}`}
+              className={`font-mono text-xl text-left font-black p-4 border-b-2 uppercase transition-all cursor-pointer truncate ${isDarkMode ? 'border-white hover:bg-white hover:text-black' : 'border-black hover:bg-black hover:text-white'}`}
             >
               LEADERBOARD RANKINGS
             </button>
             <button 
               onClick={() => navigate('profile')}
-              className={`font-mono text-xl text-left font-black p-4 border-b-2 uppercase transition-all cursor-pointer ${isDarkMode ? 'border-white hover:bg-white hover:text-black' : 'border-black hover:bg-black hover:text-white'}`}
+              className={`font-mono text-xl text-left font-black p-4 border-b-2 uppercase transition-all cursor-pointer truncate ${isDarkMode ? 'border-white hover:bg-white hover:text-black' : 'border-black hover:bg-black hover:text-white'}`}
             >
               PROFILE INFO
             </button>
             <button 
               onClick={() => setIsDarkMode(!isDarkMode)}
-              className={`font-mono text-xl text-left font-black p-4 border-b-2 uppercase transition-all cursor-pointer ${isDarkMode ? 'border-white hover:bg-white hover:text-black' : 'border-black hover:bg-black hover:text-white'}`}
+              className={`font-mono text-xl text-left font-black p-4 border-b-2 uppercase transition-all cursor-pointer truncate ${isDarkMode ? 'border-white hover:bg-white hover:text-black' : 'border-black hover:bg-black hover:text-white'}`}
             >
               TOGGLE THEME
             </button>
@@ -174,22 +176,24 @@ function App() {
       </div>
 
       {/* Top Navbar */}
-      <nav className={`border-b-4 px-4 py-4 flex items-center sticky top-0 z-30 transition-colors duration-300 ${isDarkMode ? 'border-white bg-zinc-900' : 'border-black bg-white'}`}>
-        <button 
-          onClick={() => setIsSidebarOpen(true)}
-          className={`border-4 p-2 transition-colors mr-4 ${isDarkMode ? 'border-white bg-zinc-900 text-white hover:bg-white hover:text-black' : 'border-black bg-white text-black hover:bg-black hover:text-white'}`}
-        >
-          <Menu strokeWidth={3} />
-        </button>
-        <div className={`font-black uppercase tracking-tight text-2xl flex items-center gap-2 ${isDarkMode ? 'text-white' : 'text-black'}`}>
-          <span className={isDarkMode ? 'text-white text-3xl' : 'text-black text-3xl'}>●</span> CIVICPULSE
+      <nav className={`w-full border-b-4 px-4 py-3 flex justify-between items-center sticky top-0 z-30 transition-colors duration-300 ${isDarkMode ? 'border-white bg-zinc-900' : 'border-black bg-white'}`}>
+        <div className="flex items-center gap-4">
+          <button 
+            onClick={() => setIsSidebarOpen(true)}
+            className={`border-4 p-2 transition-colors ${isDarkMode ? 'border-white bg-zinc-900 text-white hover:bg-white hover:text-black' : 'border-black bg-white text-black hover:bg-black hover:text-white'}`}
+          >
+            <Menu strokeWidth={3} />
+          </button>
+          <div className={`text-xl sm:text-2xl md:text-3xl font-black uppercase tracking-tight flex items-center gap-2 ${isDarkMode ? 'text-white' : 'text-black'}`}>
+            <span className={isDarkMode ? 'text-white text-3xl' : 'text-black text-3xl'}></span> CIVICPULSE
+          </div>
         </div>
       </nav>
 
       {/* Main Content Area */}
-      <main className="w-full max-w-6xl mx-auto px-4 py-6 grid grid-cols-1 lg:grid-cols-3 gap-8 items-start box-border">
+      <main className="w-full max-w-6xl mx-auto py-4 md:py-6 grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-8 items-start box-border">
         {/* Left/Center Column - Active Feed */}
-        <div className="lg:col-span-2">
+        <div className="lg:col-span-2 w-full">
           {currentView === 'feed' && (
             <LocationFeed 
               userLocation={userLocation} 
@@ -215,12 +219,16 @@ function App() {
           {currentView === 'profile' && (
             <Profile 
               session={session} 
+              viewedUserId={selectedProfileId}
               isDarkMode={isDarkMode} 
               onSelectIssue={(id) => navigate('detail', id)} 
             />
           )}
           {currentView === 'leaderboard' && (
-            <Leaderboard isDarkMode={isDarkMode} />
+            <Leaderboard 
+              isDarkMode={isDarkMode} 
+              onSelectUser={(id) => navigate('profile', id)}
+            />
           )}
         </div>
 

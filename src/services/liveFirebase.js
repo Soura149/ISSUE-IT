@@ -218,7 +218,7 @@ export const upvoteIssue = async (issueId, userLat, userLon) => {
         newStatus = "escalated";
         escalationData = {
           formal_complaint: `To the Municipal Commissioner,\n\nWe urgently bring to your attention a ${issue.category} at coordinates (${issue.latitude}, ${issue.longitude}). This hazard has been formally co-signed and verified by local residents. Immediate structural intervention is demanded to prevent further risk to public safety.\n\nSincerely,\nConcerned Citizens`,
-          social_draft: `🚨 Immediate hazard detected! Critical ${issue.category} at ${issue.latitude.toFixed(4)}, ${issue.longitude.toFixed(4)}. Verified by community. @MunicipalCorp please fix immediately! #CivicAction #Accountability`
+          social_draft: ` Immediate hazard detected! Critical ${issue.category} at ${issue.latitude.toFixed(4)}, ${issue.longitude.toFixed(4)}. Verified by community. @MunicipalCorp please fix immediately! #CivicAction #Accountability`
         };
       }
 

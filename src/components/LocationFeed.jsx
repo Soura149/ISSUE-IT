@@ -112,7 +112,7 @@ const LocationFeed = ({ userLocation, onSelectIssue, isDarkMode }) => {
               return (
                 <div 
                   key={issue.id} 
-                  className={`flex flex-col p-4 border-4 hover:-translate-y-0.5 transition-all cursor-pointer ${issue.status === 'SOLVED' ? 'opacity-75 grayscale-[0.2]' : ''} ${isDarkMode ? 'bg-zinc-900 border-white shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]' : 'bg-white border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]'}`}
+                  className={`flex flex-col w-full p-4 border-4 mb-4 hover:-translate-y-0.5 transition-all cursor-pointer ${issue.status === 'SOLVED' ? 'opacity-75 grayscale-[0.2]' : ''} ${isDarkMode ? 'bg-black border-white shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]' : 'bg-white border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]'}`}
                   onClick={() => onSelectIssue(issue.id)}
                 >
                   <div className="flex justify-between items-start mb-2">
@@ -123,11 +123,11 @@ const LocationFeed = ({ userLocation, onSelectIssue, isDarkMode }) => {
                       {issue.status}
                     </span>
                   </div>
-                  <p className={`font-mono text-xs font-bold uppercase mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-800'}`}>📍 {issue.location_name}</p>
-                  <h3 className={`text-xl font-black uppercase tracking-tight line-clamp-1 ${issue.status === 'SOLVED' ? 'line-through' : ''} ${isDarkMode ? 'text-white' : 'text-black'}`}>{issue.category} Report</h3>
+                  <p className={`font-mono text-xs font-bold uppercase mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-800'}`}> {issue.location_name}</p>
+                  <h3 className={`text-lg sm:text-xl font-black uppercase tracking-tight line-clamp-1 ${issue.status === 'SOLVED' ? 'line-through' : ''} ${isDarkMode ? 'text-white' : 'text-black'}`}>{issue.category} Report</h3>
                   <p className={`font-mono text-sm mt-2 line-clamp-2 ${issue.status === 'SOLVED' ? 'line-through' : ''} ${isDarkMode ? 'text-gray-200' : 'text-black'}`}>{issue.description || issue.ai_description}</p>
                   
-                  <div className="flex flex-wrap items-center gap-2 mt-4">
+                  <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mt-3 sm:mt-4">
                     <span className={`font-mono text-[10px] font-bold uppercase border-2 px-2 py-0.5 flex items-center gap-1 ${isDarkMode ? 'border-white bg-zinc-900 text-white' : 'border-black bg-white text-black'}`}>
                       <Clock size={12} strokeWidth={3} /> {new Date(issue.created_at).toLocaleDateString()}
                     </span>
@@ -147,7 +147,7 @@ const LocationFeed = ({ userLocation, onSelectIssue, isDarkMode }) => {
             return (
               <div 
                 key={issue.id} 
-                className={`flex flex-col border-4 overflow-hidden hover:-translate-y-0.5 transition-all cursor-pointer ${issue.status === 'SOLVED' ? 'opacity-75 grayscale-[0.2]' : ''} ${isDarkMode ? 'bg-zinc-900 border-white shadow-[6px_6px_0px_0px_rgba(255,255,255,1)]' : 'bg-white border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]'}`}
+                className={`flex flex-col w-full mb-4 border-4 overflow-hidden hover:-translate-y-0.5 transition-all cursor-pointer ${issue.status === 'SOLVED' ? 'opacity-75 grayscale-[0.2]' : ''} ${isDarkMode ? 'bg-black border-white shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]' : 'bg-white border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]'}`}
                 onClick={() => onSelectIssue(issue.id)}
               >
                 {/* Top Meta Row */}
@@ -176,7 +176,7 @@ const LocationFeed = ({ userLocation, onSelectIssue, isDarkMode }) => {
                       <AlertTriangle size={16} strokeWidth={3} />
                       {issue.category}
                     </div>
-                    <p className={`font-mono text-xs font-bold uppercase mt-1 ${isDarkMode ? 'text-gray-300' : 'text-gray-800'}`}>📍 {issue.location_name}</p>
+                    <p className={`font-mono text-xs font-bold uppercase mt-1 ${isDarkMode ? 'text-gray-300' : 'text-gray-800'}`}> {issue.location_name}</p>
                   </div>
                 </div>
 
@@ -184,13 +184,13 @@ const LocationFeed = ({ userLocation, onSelectIssue, isDarkMode }) => {
                 <img 
                   src={issue.photo_url} 
                   alt="Hazard" 
-                  className={`w-full max-h-[450px] object-cover border-y-4 ${isDarkMode ? 'border-white' : 'border-black'}`} 
+                  className={`w-full h-48 sm:h-64 md:h-auto md:max-h-[450px] object-cover border-y-4 ${isDarkMode ? 'border-white' : 'border-black'}`} 
                 />
 
                 {/* Bottom text content section */}
                 <div className="p-4 flex flex-col space-y-2">
                   <p className={`font-mono text-sm line-clamp-2 ${issue.status === 'SOLVED' ? 'line-through' : ''} ${isDarkMode ? 'text-gray-200' : 'text-black'}`}>{issue.description || issue.ai_description}</p>
-                  <div className="flex flex-wrap items-center gap-2 mt-2">
+                  <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mt-3 sm:mt-4">
                     <span className={`font-mono text-[10px] font-bold uppercase border-2 px-2 py-0.5 ${isDarkMode ? 'border-white bg-zinc-900 text-white' : 'border-black bg-white text-black'}`}>
                       UPVOTES: {issue.upvote_count}
                     </span>

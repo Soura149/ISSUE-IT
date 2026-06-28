@@ -235,17 +235,17 @@ const IssueDetail = ({ issueId, userLocation, onBack, isDarkMode }) => {
 
         {(issue.status === 'OPEN' || issue.status === 'open') && (
           <div className={`border-4 p-4 mt-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] ${isDarkMode ? 'border-white bg-zinc-900 shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]' : 'border-black bg-white'}`}>
-            <h3 className="font-mono font-black text-sm mb-2">⚡ RESOLVE THIS ISSUE</h3>
+            <h3 className="font-mono font-black text-sm mb-2"> RESOLVE THIS ISSUE</h3>
             <p className={`font-mono text-xs mb-4 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
               Are you on-site? Upload a photo showing the cleared or fixed area to send this into community verification.
             </p>
             {uploadingProof || cvSimulating ? (
               <div className={`w-full block text-center font-mono font-bold text-xs border-4 p-3 uppercase tracking-wider ${isDarkMode ? 'bg-zinc-800 border-white text-white' : 'bg-gray-100 border-black text-black'}`}>
-                ⏳ Analyzing image differences via Vision API...
+                 Analyzing image differences via Vision API...
               </div>
             ) : (
               <label className={`w-full block text-center font-mono font-bold text-xs border-4 p-3 uppercase cursor-pointer transition-colors tracking-wider ${isDarkMode ? 'bg-black text-white border-white hover:bg-white hover:text-black' : 'bg-white text-black border-black hover:bg-black hover:text-white'}`}>
-                📸 CHOOSE RESOLUTION PHOTO
+                 CHOOSE RESOLUTION PHOTO
                 <input type="file" className="hidden" accept="image/*" onChange={handleProofUpload} />
               </label>
             )}
@@ -257,7 +257,7 @@ const IssueDetail = ({ issueId, userLocation, onBack, isDarkMode }) => {
         {isSolved ? (
           <div className={`border-t-4 pt-6 ${isDarkMode ? 'border-white' : 'border-black'}`}>
             <div className={`border-4 p-4 text-center font-black uppercase text-xl ${isDarkMode ? 'bg-zinc-800 border-white text-white shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]' : 'bg-gray-100 border-black text-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]'}`}>
-              🎉 COMMUNITY RESOLVED
+               COMMUNITY RESOLVED
             </div>
           </div>
         ) : isUnderProcess ? (
@@ -271,7 +271,7 @@ const IssueDetail = ({ issueId, userLocation, onBack, isDarkMode }) => {
                   disabled={vouching}
                   className={`w-full bg-[#FFCC00] text-black font-black border-4 py-3 uppercase tracking-wider transition-all hover:-translate-y-0.5 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] disabled:opacity-50`}
                 >
-                  {vouching ? 'VOUCHING...' : '👍 VOUCH FOR RESOLUTION'}
+                  {vouching ? 'VOUCHING...' : ' VOUCH FOR RESOLUTION'}
                 </button>
              </div>
            ) : (
@@ -287,7 +287,7 @@ const IssueDetail = ({ issueId, userLocation, onBack, isDarkMode }) => {
         ) : issue.upvote_count < ESCALATION_THRESHOLD ? (
           <div className={`border-t-4 pt-6 ${isDarkMode ? 'border-white' : 'border-black'}`}>
             <div className={`border-4 p-4 text-center font-mono font-bold text-sm tracking-tight ${isDarkMode ? 'bg-zinc-900 border-white text-white' : 'bg-white border-black text-black'}`}>
-              🔓 ESCALATION SUITE UNLOCKS AT {ESCALATION_THRESHOLD} UPVOTES (CURRENT: {issue.upvote_count})
+               ESCALATION SUITE UNLOCKS AT {ESCALATION_THRESHOLD} UPVOTES (CURRENT: {issue.upvote_count})
             </div>
           </div>
         ) : !isEscalatedGenerated ? (
@@ -296,7 +296,7 @@ const IssueDetail = ({ issueId, userLocation, onBack, isDarkMode }) => {
               onClick={() => setIsEscalatedGenerated(true)}
               className={`w-full text-md font-black border-4 py-3 uppercase tracking-wider transition-all active:translate-x-0 active:translate-y-0 ${isDarkMode ? 'bg-white text-black border-white shadow-[4px_4px_0px_0px_rgba(255,255,255,0.3)] hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[6px_6px_0px_0px_rgba(255,255,255,1)] hover:bg-zinc-900 hover:text-white' : 'bg-black text-white border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.3)] hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:bg-white hover:text-black'}`}
             >
-              🔥 GENERATE ESCALATION SUITE
+               GENERATE ESCALATION SUITE
             </button>
           </div>
         ) : issue.escalation_data ? (

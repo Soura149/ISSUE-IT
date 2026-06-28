@@ -133,7 +133,7 @@ const SubmissionForm = ({ userLocation, onComplete, isDarkMode }) => {
       {duplicateThreat && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
           <div className="border-4 border-black bg-yellow-300 text-black p-4 font-mono font-bold shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:border-white max-w-md w-full relative">
-            <h2 className="text-2xl font-black uppercase mb-3">⚠️ DUPLICATE THREAT DETECTED</h2>
+            <h2 className="text-2xl font-black uppercase mb-3"> DUPLICATE THREAT DETECTED</h2>
             <p className="mb-6 text-sm">
               A similar issue in this category has already been reported nearby at [{duplicateThreat.location_name || duplicateThreat.locationName}]. 
               Please review the active feed or upvote the existing report to escalate it.
