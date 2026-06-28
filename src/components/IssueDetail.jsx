@@ -88,7 +88,7 @@ const IssueDetail = ({ issueId, userLocation, onBack }) => {
   );
 
   const isEscalated = issue.status === 'escalated';
-  const isTooFar = distance !== null && distance > 100;
+  const isTooFar = distance !== null && distance > 500000;
 
   return (
     <div className="flex flex-col gap-6">
@@ -153,7 +153,7 @@ const IssueDetail = ({ issueId, userLocation, onBack }) => {
               </button>
               {isTooFar && (
                 <p className="font-mono text-sm mt-2 text-center font-bold border-2 border-black bg-white absolute w-full -bottom-8">
-                  TOO FAR (&lt; 100M)
+                  TOO FAR (&lt; 500KM)
                 </p>
               )}
             </div>

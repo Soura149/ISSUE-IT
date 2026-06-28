@@ -20,7 +20,7 @@ const LocationFeed = ({ userLocation, onSelectIssue }) => {
             issue.latitude, 
             issue.longitude
           );
-          return dist <= 1000;
+          return dist <= 500000;
         });
         // Sort by created_at descending
         localIssues.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
@@ -48,7 +48,7 @@ const LocationFeed = ({ userLocation, onSelectIssue }) => {
       <div className="flex justify-between items-end border-b-4 border-black pb-4">
         <div>
           <h1 className="text-4xl font-black uppercase tracking-tight leading-none">Local Feed</h1>
-          <p className="font-mono font-bold uppercase mt-2">Showing issues within 1km</p>
+          <p className="font-mono font-bold uppercase mt-2">Showing issues within 500km</p>
         </div>
         <div className="font-mono border-2 border-black px-2 py-0.5 text-xs font-bold uppercase bg-white text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] flex items-center gap-1">
           <MapPin size={12} strokeWidth={3} />
@@ -62,7 +62,7 @@ const LocationFeed = ({ userLocation, onSelectIssue }) => {
         </div>
       ) : issues.length === 0 ? (
         <div className="border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] bg-white text-center p-8 mt-4">
-          <p className="font-black uppercase text-xl">No issues found within 1km.</p>
+          <p className="font-black uppercase text-xl">No issues found within 500km.</p>
         </div>
       ) : (
         <div className="flex flex-col gap-6 mt-2">

@@ -137,9 +137,9 @@ export const upvoteIssue = async (issueId, userLat, userLon) => {
       
       const issue = issueDoc.data();
 
-      // Proximity Gate (< 100m)
+      // Proximity Gate (< 500km)
       const distance = calculateDistance(userLat, userLon, issue.latitude, issue.longitude);
-      if (distance > 100) {
+      if (distance > 500000) {
         throw new Error("You must be physically present near this issue to co-sign it.");
       }
 
