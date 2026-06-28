@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { onAuthStateChanged, signInWithPopup, signOut } from 'firebase/auth';
 import { auth, googleProvider } from './services/firebaseConfig';
-import { getIssues } from './services/liveFirebase';
+import { getIssues, syncUserProfile } from './services/liveFirebase';
 import LocationFeed from './components/LocationFeed';
 import SubmissionForm from './components/SubmissionForm';
 import IssueDetail from './components/IssueDetail';
 import Profile from './components/Profile';
+import Leaderboard from './components/Leaderboard';
 import { Menu } from 'lucide-react';
 
 function App() {
@@ -21,6 +22,9 @@ function App() {
     // 1. Frictionless Identity Layer
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setSession(user);
+      if (user) {
+        syncUserProfile(user);
+      }
     });
 
     // 2. GPS Aggregation Engine
@@ -125,6 +129,12 @@ function App() {
               👤 PROFILE INFO
             </button>
             <button 
+              onClick={() => navigate('leaderboard')}
+              className={`font-mono text-xl text-left font-black p-4 border-b-2 uppercase transition-all cursor-pointer ${isDarkMode ? 'border-white hover:bg-white hover:text-black' : 'border-black hover:bg-black hover:text-white'}`}
+            >
+              🏆 LEADERBOARD RANKINGS
+            </button>
+            <button 
               onClick={() => navigate('feed')}
               className={`font-mono text-xl text-left font-black p-4 border-b-2 uppercase transition-all cursor-pointer ${isDarkMode ? 'border-white hover:bg-white hover:text-black' : 'border-black hover:bg-black hover:text-white'}`}
             >
@@ -209,6 +219,9 @@ function App() {
               isDarkMode={isDarkMode} 
               onSelectIssue={(id) => navigate('detail', id)} 
             />
+          )}
+          {currentView === 'leaderboard' && (
+            <Leaderboard isDarkMode={isDarkMode} />
           )}
         </div>
 

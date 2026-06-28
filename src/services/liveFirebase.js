@@ -1,11 +1,54 @@
-import { collection, doc, getDocs, getDoc, setDoc, runTransaction } from 'firebase/firestore';
+import { collection, doc, getDocs, getDoc, setDoc, runTransaction, increment } from 'firebase/firestore';
 import { auth, db } from './firebaseConfig';
 import { GoogleGenAI } from '@google/genai';
 
 // Phase 1: Identity Layer
 
 export const getSessionId = () => {
-  return auth.currentUser ? auth.currentUser.uid : null;
+  if (auth.currentUser) {
+    return auth.currentUser.uid;
+  }
+  let sessionId = localStorage.getItem('civic_session_id');
+  if (!sessionId) {
+    sessionId = 'session_' + Math.random().toString(36).substr(2, 9);
+    localStorage.setItem('civic_session_id', sessionId);
+  }
+  return sessionId;
+};
+
+export const syncUserProfile = async (user) => {
+  if (!user) return;
+  const userRef = doc(db, 'users', user.uid);
+  
+  const userDoc = await getDoc(userRef);
+  
+  if (!userDoc.exists() || !userDoc.data().xpPoints) {
+    // Backfill historical XP for existing users
+    const issuesSnap = await getDocs(collection(db, "issues"));
+    let historicalXp = 0;
+    issuesSnap.forEach((docSnap) => {
+      const data = docSnap.data();
+      if (data.reporter_session_id === user.uid) {
+        if (data.status === 'SOLVED') historicalXp += 50;
+        else if (data.status === 'UNDER_PROCESS') historicalXp += 20;
+        else historicalXp += 10;
+      }
+    });
+    
+    await setDoc(userRef, {
+      displayName: user.displayName || 'Anonymous',
+      photoURL: user.photoURL || '',
+      email: user.email || '',
+      xpPoints: historicalXp
+    }, { merge: true });
+  } else {
+    // Ensure profile info is up to date without overwriting XP
+    await setDoc(userRef, {
+      displayName: user.displayName || 'Anonymous',
+      photoURL: user.photoURL || '',
+      email: user.email || ''
+    }, { merge: true });
+  }
 };
 
 // Haversine formula (Client-Side GPS Processing)
@@ -59,16 +102,24 @@ export const getUserIssues = async (uid) => {
 export const createIssue = async (issueData) => {
   const newIssueRef = doc(collection(db, "issues"));
   const user = auth.currentUser;
+  const reporterId = getSessionId();
   const newIssue = {
     ...issueData,
     location_name: issueData.locationName || 'Unknown Location',
     upvote_count: 1,
     status: "OPEN",
-    reporter_session_id: getSessionId(),
+    reporter_session_id: reporterId,
     reporter_name: user && user.displayName ? user.displayName : "Anonymous",
     created_at: new Date().toISOString()
   };
   await setDoc(newIssueRef, newIssue);
+
+  // XP Increment for creating an issue
+  if (reporterId) {
+    const userRef = doc(db, "users", reporterId);
+    await setDoc(userRef, { xpPoints: increment(10) }, { merge: true });
+  }
+
   return { id: newIssueRef.id, ...newIssue };
 };
 
@@ -219,6 +270,12 @@ export const submitResolutionProof = async (issueId, imageUrl) => {
       };
       
       transaction.update(issueRef, issueUpdates);
+
+      if (issue.reporter_session_id) {
+        const userRef = doc(db, "users", issue.reporter_session_id);
+        transaction.set(userRef, { xpPoints: increment(10) }, { merge: true });
+      }
+
       return { id: issueId, ...issue, ...issueUpdates };
     });
 
@@ -263,6 +320,10 @@ export const vouchForResolution = async (issueId) => {
 
       if (newVerificationUpvotes >= 3) {
         newStatus = "SOLVED";
+        if (issue.reporter_session_id) {
+          const userRef = doc(db, "users", issue.reporter_session_id);
+          transaction.set(userRef, { xpPoints: increment(30) }, { merge: true });
+        }
       }
 
       transaction.set(vouchRef, {
