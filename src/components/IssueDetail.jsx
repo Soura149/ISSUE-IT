@@ -2,13 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { getIssue, upvoteIssue, calculateDistance, getSessionId, submitResolutionProof, vouchForResolution } from '../services/liveFirebase';
 import { uploadImageToCloudinary } from '../services/cloudinary';
 import { generateImpactCard } from './CanvasRenderer';
-import { AlertTriangle, MapPin, Share2, Copy, ThumbsUp, ArrowLeft, Mail, MessageSquare } from 'lucide-react';
+import { AlertTriangle, MapPin, Share2, Copy, ThumbsUp, ArrowLeft, Mail, MessageSquare, ChevronDown, ChevronUp } from 'lucide-react';
 import { getSeverityStyles } from '../utils/theme';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '../services/firebaseConfig';
 
 const ESCALATION_THRESHOLD = 5;
 
-const IssueDetail = ({ issueId, userLocation, onBack, isDarkMode }) => {
+const IssueDetail = ({ issueId, userLocation, onBack, isDarkMode, session }) => {
   const [issue, setIssue] = useState(null);
+  const [userProfile, setUserProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [upvoting, setUpvoting] = useState(false);
   const [error, setError] = useState('');
@@ -18,10 +21,24 @@ const IssueDetail = ({ issueId, userLocation, onBack, isDarkMode }) => {
   const [uploadingProof, setUploadingProof] = useState(false);
   const [cvSimulating, setCvSimulating] = useState(false);
   const [vouching, setVouching] = useState(false);
+  const [localBodyType, setLocalBodyType] = useState('Urban');
+  const [localBodyName, setLocalBodyName] = useState('');
+  const [districtName, setDistrictName] = useState('');
+  const [copied, setCopied] = useState(false);
+  const [isSopOpen, setIsSopOpen] = useState(false);
+  const [modalImageSrc, setModalImageSrc] = useState(null);
 
   useEffect(() => {
-    const fetchIssue = async () => {
+    const fetchData = async () => {
       setLoading(true);
+      if (session?.uid) {
+        const userRef = doc(db, 'users', session.uid);
+        const userSnap = await getDoc(userRef);
+        if (userSnap.exists()) {
+          setUserProfile(userSnap.data());
+        }
+      }
+
       const data = await getIssue(issueId);
       setIssue(data);
       if (data && userLocation) {
@@ -35,8 +52,8 @@ const IssueDetail = ({ issueId, userLocation, onBack, isDarkMode }) => {
       }
       setLoading(false);
     };
-    fetchIssue();
-  }, [issueId, userLocation]);
+    fetchData();
+  }, [issueId, userLocation, session]);
 
   const handleUpvote = async () => {
     if (!userLocation) return;
@@ -145,6 +162,47 @@ const IssueDetail = ({ issueId, userLocation, onBack, isDarkMode }) => {
   const currentUserId = getSessionId();
   const isPoster = issue.reporter_session_id === currentUserId;
 
+  const generateFormalLetter = () => {
+    const area = userProfile?.localArea || "[User's Local Area]";
+    const state = userProfile?.state || "[User's State]";
+    const pin = userProfile?.pinCode || "[User's PIN Code]";
+    const name = userProfile?.displayName || session?.displayName || "[User's Display Name]";
+    const contact = userProfile?.email || session?.email || "[User's Public Contact Info]";
+
+    const authorityTitle = localBodyType === 'Urban' ? 'Ward Councillor' : 'Gram Pradhan';
+    const bodyTitle = localBodyType === 'Urban' ? 'Municipal Corporation' : 'Gram Panchayat';
+    const bodyNameStr = localBodyName ? `${localBodyName}` : `[${bodyTitle} Name]`;
+    const districtStr = districtName || '[District/Block Name]';
+
+    return `To,
+The Competent Authority,
+${authorityTitle},
+${bodyNameStr},
+${districtStr}, 
+${state}, PIN: ${pin}
+
+Subject: Urgent Redressal Request for Public Infrastructure Hazard at ${area} - ${issue.category}
+
+Respected Sir/Madam,
+
+I am writing to you as an active resident citizen of ${area} to formally bring to your immediate attention a severe civic hazard that requires prompt administrative intervention. 
+
+A critical public safety breakdown categorized under ${issue.category} has occurred at the following specific location: ${issue.location_name || '[Specific Location/Locality Detail]'}. 
+
+Hazard Details: ${issue.description || issue.ai_description || 'No description provided.'}
+
+This ongoing issue poses a continuous threat to public safety, local commuter traffic, and community health in our neighborhood. As the local administrative framework (Panchayat/Municipality) is statutorily responsible for public safety and infrastructure maintenance, I request your office to urgently direct the concerned department engineers/field staff to inspect the site and initiate repairs.
+
+A community-verified report containing photographic evidence has been logged by local residents under tracking reference link: ${window.location.origin}/detail/${issue.id || issueId}
+
+Thanking you.
+
+Yours faithfully,
+${name}
+Resident Citizen, ${area}
+Contact/Email: ${contact}`;
+  };
+
   return (
     <div className={`flex flex-col gap-6 ${isDarkMode ? 'text-white' : 'text-black'}`}>
       <div className="mt-2">
@@ -158,12 +216,18 @@ const IssueDetail = ({ issueId, userLocation, onBack, isDarkMode }) => {
 
       <div className={`border-4 p-4 md:p-6 flex flex-col gap-6 ${isDarkMode ? 'border-white shadow-[8px_8px_0px_0px_rgba(255,255,255,1)] bg-zinc-900' : 'border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] bg-white'}`}>
         {issue.photo_url && (
-          <div className={`border-4 ${isDarkMode ? 'border-white' : 'border-black'}`}>
+          <div 
+            className={`border-4 bg-black overflow-hidden relative group cursor-pointer ${isDarkMode ? 'border-white' : 'border-black'}`} 
+            onClick={() => setModalImageSrc(issue.photo_url)}
+          >
             <img 
               src={issue.photo_url} 
               alt="Hazard" 
-              className={`w-full h-64 object-cover border-b-4 ${isDarkMode ? 'border-white' : 'border-black'}`} 
+              className={`w-full h-auto max-h-[500px] md:max-h-[600px] object-contain transition-transform group-hover:scale-[1.02]`} 
             />
+            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+               <span className="font-black text-white text-xl uppercase border-4 border-white px-4 py-2 bg-black/50">View Full Image</span>
+            </div>
           </div>
         )}
         
@@ -192,13 +256,17 @@ const IssueDetail = ({ issueId, userLocation, onBack, isDarkMode }) => {
 
         {issue.status === 'UNDER_PROCESS' && issue.resolved_image_url && (
           <div className={`border-t-4 pt-4 grid grid-cols-2 gap-4 ${isDarkMode ? 'border-white' : 'border-black'}`}>
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-2 cursor-pointer group" onClick={() => setModalImageSrc(issue.photo_url)}>
               <span className={`font-mono text-xs font-bold uppercase text-center border-2 px-2 py-1 ${isDarkMode ? 'bg-zinc-800 border-white text-white' : 'bg-gray-100 border-black text-black'}`}>Original Hazard</span>
-              <img src={issue.photo_url} alt="Original" className={`w-full h-40 object-cover border-4 ${isDarkMode ? 'border-white' : 'border-black'}`} />
+              <div className={`border-4 relative overflow-hidden bg-black ${isDarkMode ? 'border-white' : 'border-black'}`}>
+                <img src={issue.photo_url} alt="Original" className="w-full h-40 object-contain transition-transform group-hover:scale-105" />
+              </div>
             </div>
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-2 cursor-pointer group" onClick={() => setModalImageSrc(issue.resolved_image_url)}>
               <span className={`font-mono text-xs font-bold uppercase text-center border-2 px-2 py-1 bg-[#00FF66] border-black text-black`}>Resolution Proof</span>
-              <img src={issue.resolved_image_url} alt="Resolution" className={`w-full h-40 object-cover border-4 ${isDarkMode ? 'border-white' : 'border-black'}`} />
+              <div className={`border-4 relative overflow-hidden bg-black ${isDarkMode ? 'border-white' : 'border-black'}`}>
+                <img src={issue.resolved_image_url} alt="Resolution" className="w-full h-40 object-contain transition-transform group-hover:scale-105" />
+              </div>
             </div>
           </div>
         )}
@@ -359,6 +427,109 @@ const IssueDetail = ({ issueId, userLocation, onBack, isDarkMode }) => {
           </div>
         ) : null}
       </div>
+
+      {/* SOP Guide & Formal Letter Generator */}
+      <div className={`border-4 p-4 md:p-6 flex flex-col gap-6 ${isDarkMode ? 'border-white bg-zinc-900 shadow-[8px_8px_0px_0px_rgba(255,255,255,1)]' : 'border-black bg-yellow-50 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]'}`}>
+        <button 
+          onClick={() => setIsSopOpen(!isSopOpen)}
+          className="flex justify-between items-center w-full focus:outline-none group"
+        >
+          <h2 className="text-xl md:text-2xl font-black uppercase tracking-tight flex items-center gap-2 group-hover:opacity-80 transition-opacity">
+            STANDARD MUNICIPAL PROCEDURE
+          </h2>
+          {isSopOpen ? <ChevronUp size={24} strokeWidth={3} /> : <ChevronDown size={24} strokeWidth={3} />}
+        </button>
+        
+        {isSopOpen && (
+          <>
+            <div className={`flex flex-col gap-4 font-mono text-sm border-t-4 pt-6 ${isDarkMode ? 'border-white' : 'border-black'}`}>
+              <div className={`border-l-4 pl-4 ${isDarkMode ? 'border-white' : 'border-black'}`}>
+                <strong className="uppercase">STEP 01: LOCAL AUTHORITY LODGMENT (WARD/PANCHAYAT)</strong>
+                <p className="mt-1">Download the auto-generated formal draft below. Submit it to your local <strong className="uppercase">Ward Office (Municipal Corporation)</strong> OR the <strong className="uppercase">Gram Panchayat Office (Pradhan)</strong> depending on your area. Ensure you upload to the state’s grievance portal or obtain a stamped physical Acknowledgement Receipt from the concerned office.</p>
+              </div>
+              <div className={`border-l-4 pl-4 ${isDarkMode ? 'border-white' : 'border-black'}`}>
+                <strong className="uppercase">STEP 02: THE 7-DAY ZONAL/BLOCK ESCALATION</strong>
+                <p className="mt-1">If no ground verification occurs within 7 business days, escalate your tracking number to the <strong className="uppercase">Borough Executive Engineer</strong> (for Municipalities) OR the <strong className="uppercase">Block Development Officer (BDO)</strong> (for Panchayats). Community "VOUCHES" are critical here—ensure local residents are validating the report to create pressure.</p>
+              </div>
+              <div className={`border-l-4 pl-4 ${isDarkMode ? 'border-white' : 'border-black'}`}>
+                <strong className="uppercase">STEP 03: DISTRICT-LEVEL APEX ESCALATION (DM/COLLECTOR)</strong>
+                <p className="mt-1">If local bodies remain unresponsive, take the grievance directly to the <strong className="uppercase">District Magistrate (DM) / District Collector's Office</strong>. As the district head, the DM has administrative oversight over both municipal corporations and panchayat committees to mandate action on public hazards.</p>
+              </div>
+            </div>
+
+            <div className={`border-4 p-4 flex flex-col gap-4 mt-2 ${isDarkMode ? 'bg-black border-white' : 'bg-white border-black'}`}>
+              <div className="flex justify-between items-center">
+                <h3 className="font-black uppercase flex items-center gap-2 text-lg">OFFICIAL LETTER GENERATOR</h3>
+                <button 
+                  onClick={() => {
+                    navigator.clipboard.writeText(generateFormalLetter());
+                    setCopied(true);
+                    setTimeout(() => setCopied(false), 2000);
+                  }}
+                  className={`border-2 px-3 py-1 font-black uppercase transition-all flex items-center gap-1 text-sm ${copied ? (isDarkMode ? 'border-[#00FF66] bg-[#00FF66] text-black' : 'border-[#00FF66] bg-[#00FF66] text-black') : (isDarkMode ? 'border-white bg-zinc-800 text-white hover:-translate-y-0.5 hover:-translate-x-0.5 hover:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)] hover:bg-white hover:text-black' : 'border-black bg-gray-100 text-black hover:-translate-y-0.5 hover:-translate-x-0.5 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-black hover:text-white')}`}
+                >
+                  <Copy size={16} strokeWidth={3}/> {copied ? 'COPIED!' : 'COPY'}
+                </button>
+              </div>
+
+              <div className={`grid grid-cols-1 md:grid-cols-3 gap-3 p-3 border-2 font-mono text-sm ${isDarkMode ? 'border-white bg-zinc-900' : 'border-black bg-gray-50'}`}>
+                <div className="flex flex-col gap-1">
+                  <label className="font-bold uppercase text-[10px] tracking-widest">Local Body Type</label>
+                  <select 
+                    value={localBodyType}
+                    onChange={(e) => setLocalBodyType(e.target.value)}
+                    className={`p-2 border-2 focus:outline-none uppercase font-bold text-xs cursor-pointer ${isDarkMode ? 'bg-black border-white text-white' : 'bg-white border-black text-black'}`}
+                  >
+                    <option value="Urban">Urban (Municipal)</option>
+                    <option value="Rural">Rural (Panchayat)</option>
+                  </select>
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label className="font-bold uppercase text-[10px] tracking-widest">{localBodyType === 'Urban' ? 'Municipality' : 'Panchayat'} Name</label>
+                  <input 
+                    type="text" 
+                    value={localBodyName}
+                    onChange={(e) => setLocalBodyName(e.target.value)}
+                    placeholder={`e.g. ${localBodyType === 'Urban' ? 'Kolkata Municipal Corp' : 'Salt Lake Gram Panchayat'}`}
+                    className={`p-2 border-2 focus:outline-none text-xs font-bold ${isDarkMode ? 'bg-black border-white text-white placeholder-gray-500' : 'bg-white border-black text-black placeholder-gray-400'}`}
+                  />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label className="font-bold uppercase text-[10px] tracking-widest">District / Block Name</label>
+                  <input 
+                    type="text" 
+                    value={districtName}
+                    onChange={(e) => setDistrictName(e.target.value)}
+                    placeholder="e.g. North 24 Parganas"
+                    className={`p-2 border-2 focus:outline-none text-xs font-bold ${isDarkMode ? 'bg-black border-white text-white placeholder-gray-500' : 'bg-white border-black text-black placeholder-gray-400'}`}
+                  />
+                </div>
+              </div>
+
+              <textarea 
+                readOnly 
+                className={`p-4 font-mono text-xs md:text-sm border-2 w-full resize-none focus:outline-none ${isDarkMode ? 'bg-zinc-900 border-white text-gray-300' : 'bg-gray-50 border-black text-black'}`} 
+                rows="18"
+                value={generateFormalLetter()}
+              />
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* Image Modal */}
+      {modalImageSrc && (
+        <div 
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 p-4 md:p-10 cursor-zoom-out"
+          onClick={() => setModalImageSrc(null)}
+        >
+          <img 
+            src={modalImageSrc} 
+            alt="Full screen" 
+            className="w-full h-full object-contain border-4 border-white shadow-[12px_12px_0px_0px_rgba(255,255,255,0.2)]" 
+          />
+        </div>
+      )}
     </div>
   );
 };

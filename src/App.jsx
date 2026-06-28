@@ -253,6 +253,7 @@ function App() {
               userLocation={userLocation} 
               onSelectIssue={(id) => navigateToPage(`/detail/${id}`)} 
               isDarkMode={isDarkMode}
+              session={session}
             />
           )}
           {view === 'post' && (
@@ -268,6 +269,7 @@ function App() {
               userLocation={userLocation}
               onBack={() => navigateToPage('/feed')} 
               isDarkMode={isDarkMode}
+              session={session}
             />
           )}
           {view === 'profile' && (

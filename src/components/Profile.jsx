@@ -10,7 +10,9 @@ const Profile = ({ session, viewedUserId, isDarkMode, onSelectIssue }) => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('active'); // 'active' or 'resolved'
   const [profileData, setProfileData] = useState(null);
-
+  const [editingLocality, setEditingLocality] = useState(false);
+  const [localityForm, setLocalityForm] = useState({ localArea: '', pinCode: '', state: '' });
+  const [savingLocality, setSavingLocality] = useState(false);
   const targetUserId = viewedUserId || session?.uid;
   const isOwnProfile = !viewedUserId || viewedUserId === session?.uid;
 
@@ -33,7 +35,13 @@ const Profile = ({ session, viewedUserId, isDarkMode, onSelectIssue }) => {
         const userRef = doc(db, 'users', session.uid);
         const userSnap = await getDoc(userRef);
         if (userSnap.exists()) {
-          setProfileData({ uid: session.uid, ...userSnap.data() });
+          const data = userSnap.data();
+          setProfileData({ uid: session.uid, ...data });
+          setLocalityForm({ 
+            localArea: data.localArea || '', 
+            pinCode: data.pinCode || '', 
+            state: data.state || '' 
+          });
         } else {
           setProfileData({
             uid: session.uid,
@@ -64,6 +72,26 @@ const Profile = ({ session, viewedUserId, isDarkMode, onSelectIssue }) => {
     } catch (e) {
       console.error("Failed to update email visibility", e);
       setProfileData(prev => ({ ...prev, isEmailVisible: !newVisibility }));
+    }
+  };
+
+  const handleSaveLocality = async (e) => {
+    e.preventDefault();
+    if (!isOwnProfile) return;
+    setSavingLocality(true);
+    try {
+      const userRef = doc(db, 'users', session.uid);
+      await updateDoc(userRef, { 
+        localArea: localityForm.localArea,
+        pinCode: localityForm.pinCode,
+        state: localityForm.state
+      });
+      setProfileData(prev => ({ ...prev, ...localityForm }));
+      setEditingLocality(false);
+    } catch (error) {
+      console.error("Failed to save locality", error);
+    } finally {
+      setSavingLocality(false);
     }
   };
 
@@ -163,6 +191,99 @@ const Profile = ({ session, viewedUserId, isDarkMode, onSelectIssue }) => {
           </div>
         </div>
       </div>
+
+      {/* My System Locality (Gated) */}
+      {isOwnProfile && (
+        <div className={`w-full border-4 p-4 mt-2 ${isDarkMode ? 'border-white bg-zinc-950 shadow-[8px_8px_0px_0px_rgba(255,255,255,1)]' : 'border-black bg-yellow-50 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]'}`}>
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-black uppercase tracking-tight">MY SYSTEM LOCALITY</h2>
+            {!editingLocality && (
+              <button 
+                onClick={() => setEditingLocality(true)}
+                className={`font-mono text-xs font-bold uppercase border-2 px-3 py-1 transition-all ${isDarkMode ? 'border-white bg-white text-black hover:-translate-y-0.5' : 'border-black bg-black text-white hover:-translate-y-0.5'}`}
+              >
+                EDIT
+              </button>
+            )}
+          </div>
+          
+          {editingLocality ? (
+            <form onSubmit={handleSaveLocality} className="flex flex-col gap-3 font-mono text-sm">
+              <div className="flex flex-col gap-1">
+                <label className="font-bold uppercase">Local Area / Neighborhood</label>
+                <input 
+                  type="text" 
+                  value={localityForm.localArea}
+                  onChange={e => setLocalityForm({...localityForm, localArea: e.target.value})}
+                  className={`border-2 p-2 focus:outline-none ${isDarkMode ? 'bg-zinc-900 border-gray-600 focus:border-white text-white' : 'bg-white border-gray-400 focus:border-black text-black'}`}
+                  placeholder="e.g. Salt Lake Sector 5"
+                />
+              </div>
+              <div className="flex flex-col gap-1">
+                <label className="font-bold uppercase">PIN Code / Postal Code</label>
+                <input 
+                  type="text" 
+                  value={localityForm.pinCode}
+                  onChange={e => setLocalityForm({...localityForm, pinCode: e.target.value})}
+                  className={`border-2 p-2 focus:outline-none ${isDarkMode ? 'bg-zinc-900 border-gray-600 focus:border-white text-white' : 'bg-white border-gray-400 focus:border-black text-black'}`}
+                  placeholder="e.g. 700091"
+                />
+              </div>
+              <div className="flex flex-col gap-1">
+                <label className="font-bold uppercase">State / Province</label>
+                <input 
+                  type="text" 
+                  value={localityForm.state}
+                  onChange={e => setLocalityForm({...localityForm, state: e.target.value})}
+                  className={`border-2 p-2 focus:outline-none ${isDarkMode ? 'bg-zinc-900 border-gray-600 focus:border-white text-white' : 'bg-white border-gray-400 focus:border-black text-black'}`}
+                  placeholder="e.g. West Bengal"
+                />
+              </div>
+              <div className="flex gap-2 mt-2">
+                <button 
+                  type="button"
+                  onClick={() => {
+                    setEditingLocality(false);
+                    setLocalityForm({ 
+                      localArea: profileData?.localArea || '', 
+                      pinCode: profileData?.pinCode || '', 
+                      state: profileData?.state || '' 
+                    });
+                  }}
+                  className={`flex-1 border-2 py-2 font-bold uppercase transition-all ${isDarkMode ? 'border-gray-600 text-gray-300 hover:bg-zinc-800' : 'border-gray-400 text-gray-600 hover:bg-gray-100'}`}
+                >
+                  CANCEL
+                </button>
+                <button 
+                  type="submit"
+                  disabled={savingLocality}
+                  className={`flex-1 border-2 py-2 font-bold uppercase transition-all ${isDarkMode ? 'border-white bg-[#00FF66] text-black hover:-translate-y-0.5' : 'border-black bg-[#00FF66] text-black hover:-translate-y-0.5'}`}
+                >
+                  {savingLocality ? 'SAVING...' : 'SAVE DATA'}
+                </button>
+              </div>
+            </form>
+          ) : (
+            <div className="flex flex-col gap-2 font-mono text-sm">
+              <div className="flex flex-col">
+                <span className={`text-xs uppercase font-bold ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Local Area</span>
+                <span className="font-bold">{profileData?.localArea || 'Not set'}</span>
+              </div>
+              <div className="flex gap-4">
+                <div className="flex flex-col flex-1">
+                  <span className={`text-xs uppercase font-bold ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>PIN Code</span>
+                  <span className="font-bold">{profileData?.pinCode || 'Not set'}</span>
+                </div>
+                <div className="flex flex-col flex-1">
+                  <span className={`text-xs uppercase font-bold ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>State</span>
+                  <span className="font-bold">{profileData?.state || 'Not set'}</span>
+                </div>
+              </div>
+              <p className={`text-xs mt-2 italic ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>* This data is private and used to prioritize local issues in your feed.</p>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Tabs */}
       <div className={`w-full flex border-4 p-1 my-4 overflow-x-auto ${isDarkMode ? 'border-white bg-black' : 'border-black bg-black'}`}>

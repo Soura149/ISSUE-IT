@@ -27,7 +27,9 @@ const SubmissionForm = ({ userLocation, onComplete, isDarkMode }) => {
     locationName: '',
     category: '',
     severity: '',
-    description: ''
+    description: '',
+    reportedLocality: '',
+    reportedPIN: ''
   });
   
   const fileInputRef = useRef(null);
@@ -116,6 +118,8 @@ const SubmissionForm = ({ userLocation, onComplete, isDarkMode }) => {
         category: formData.category || 'other',
         severity: formData.severity || 'low',
         description: formData.description,
+        reportedLocality: formData.reportedLocality,
+        reportedPIN: formData.reportedPIN,
         ai_description: formData.description, // in real app, might be distinct
         photo_url: finalPhotoUrl || "https://images.unsplash.com/photo-1515162816999-a0c47dc192f7?auto=format&fit=crop&q=80&w=400", // fallback demo
       });
@@ -249,6 +253,28 @@ const SubmissionForm = ({ userLocation, onComplete, isDarkMode }) => {
             onChange={e => setFormData({...formData, locationName: e.target.value})}
             required
           />
+          <div className="flex flex-col sm:flex-row gap-4 mt-2">
+            <div className="flex flex-col flex-1 gap-2">
+              <label className="font-bold uppercase text-sm">Local Area / Neighborhood</label>
+              <input 
+                type="text" 
+                className={`w-full p-3 font-mono text-sm border-4 font-bold focus:outline-none ${isDarkMode ? 'bg-zinc-900 border-white text-white focus:bg-zinc-800 placeholder-gray-400' : 'bg-white border-black text-black focus:bg-yellow-50 placeholder-gray-500'}`}
+                placeholder="e.g. Salt Lake Sector 5"
+                value={formData.reportedLocality}
+                onChange={e => setFormData({...formData, reportedLocality: e.target.value})}
+              />
+            </div>
+            <div className="flex flex-col flex-1 gap-2">
+              <label className="font-bold uppercase text-sm">PIN Code / Postal Code</label>
+              <input 
+                type="text" 
+                className={`w-full p-3 font-mono text-sm border-4 font-bold focus:outline-none ${isDarkMode ? 'bg-zinc-900 border-white text-white focus:bg-zinc-800 placeholder-gray-400' : 'bg-white border-black text-black focus:bg-yellow-50 placeholder-gray-500'}`}
+                placeholder="e.g. 700091"
+                value={formData.reportedPIN}
+                onChange={e => setFormData({...formData, reportedPIN: e.target.value})}
+              />
+            </div>
+          </div>
         </div>
 
         <div className="flex flex-col gap-2">

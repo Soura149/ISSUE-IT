@@ -2,21 +2,47 @@ import React, { useEffect, useState } from 'react';
 import { MapPin, AlertTriangle, Clock } from 'lucide-react';
 import { getIssues, calculateDistance } from '../services/liveFirebase';
 import { getSeverityStyles } from '../utils/theme';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '../services/firebaseConfig';
 
-const LocationFeed = ({ userLocation, onSelectIssue, isDarkMode }) => {
+const LocationFeed = ({ userLocation, onSelectIssue, isDarkMode, session }) => {
   const [issues, setIssues] = useState([]);
   const [loading, setLoading] = useState(true);
   const [feedType, setFeedType] = useState('local');
+  const [userProfile, setUserProfile] = useState(null);
 
   useEffect(() => {
-    const fetchIssues = async () => {
+    const fetchIssuesAndProfile = async () => {
       setLoading(true);
+
+      let currentUserProfile = null;
+      if (session?.uid) {
+        const userRef = doc(db, 'users', session.uid);
+        const userSnap = await getDoc(userRef);
+        if (userSnap.exists()) {
+          currentUserProfile = userSnap.data();
+          setUserProfile(currentUserProfile);
+        }
+      }
+
       const allIssues = await getIssues();
       
       if (userLocation) {
         let displayIssues = allIssues;
         if (feedType === 'local') {
           displayIssues = allIssues.filter(issue => {
+            const issueLocality = String(issue.reportedLocality || issue.location_name || issue.locationName || '').toLowerCase().trim();
+            const userLocality = String(currentUserProfile?.localArea || '').toLowerCase().trim();
+            const issuePin = String(issue.reportedPIN || '').trim();
+            const userPin = String(currentUserProfile?.pinCode || '').trim();
+
+            const matchLocality = userLocality && issueLocality && (issueLocality === userLocality || issueLocality.includes(userLocality) || userLocality.includes(issueLocality));
+            const matchPIN = userPin && issuePin && issuePin === userPin;
+            
+            if (matchLocality || matchPIN) {
+              return true;
+            }
+
             const dist = calculateDistance(
               userLocation.latitude, 
               userLocation.longitude, 
@@ -29,16 +55,33 @@ const LocationFeed = ({ userLocation, onSelectIssue, isDarkMode }) => {
           displayIssues = allIssues.filter(issue => issue.status === 'UNDER_PROCESS');
         }
         
-        displayIssues.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+        displayIssues.sort((a, b) => {
+          if (feedType === 'local' && currentUserProfile) {
+            const aLocality = String(a.reportedLocality || a.location_name || a.locationName || '').toLowerCase().trim();
+            const bLocality = String(b.reportedLocality || b.location_name || b.locationName || '').toLowerCase().trim();
+            const userLocality = String(currentUserProfile?.localArea || '').toLowerCase().trim();
+            
+            const aPin = String(a.reportedPIN || '').trim();
+            const bPin = String(b.reportedPIN || '').trim();
+            const userPin = String(currentUserProfile?.pinCode || '').trim();
+
+            const aMatch = (userLocality && aLocality && (aLocality === userLocality || aLocality.includes(userLocality) || userLocality.includes(aLocality))) || (userPin && aPin && aPin === userPin);
+            const bMatch = (userLocality && bLocality && (bLocality === userLocality || bLocality.includes(userLocality) || userLocality.includes(bLocality))) || (userPin && bPin && bPin === userPin);
+            
+            if (aMatch && !bMatch) return -1;
+            if (!aMatch && bMatch) return 1;
+          }
+          return new Date(b.created_at) - new Date(a.created_at);
+        });
         setIssues(displayIssues);
       }
       setLoading(false);
     };
 
     if (userLocation) {
-      fetchIssues();
+      fetchIssuesAndProfile();
     }
-  }, [userLocation, feedType]);
+  }, [userLocation, feedType, session]);
 
   if (!userLocation) {
     return (
