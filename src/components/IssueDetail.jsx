@@ -3,6 +3,8 @@ import { getIssue, upvoteIssue, calculateDistance } from '../services/liveFireba
 import { generateImpactCard } from './CanvasRenderer';
 import { AlertTriangle, MapPin, Share2, Copy, ThumbsUp, ArrowLeft, Mail, MessageSquare } from 'lucide-react';
 
+const ESCALATION_THRESHOLD = 5;
+
 const IssueDetail = ({ issueId, userLocation, onBack }) => {
   const [issue, setIssue] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -10,6 +12,7 @@ const IssueDetail = ({ issueId, userLocation, onBack }) => {
   const [error, setError] = useState('');
   const [distance, setDistance] = useState(null);
   const [cardImage, setCardImage] = useState(null);
+  const [isEscalatedGenerated, setIsEscalatedGenerated] = useState(false);
 
   useEffect(() => {
     const fetchIssue = async () => {
@@ -107,7 +110,7 @@ const IssueDetail = ({ issueId, userLocation, onBack }) => {
             <img 
               src={issue.photo_url} 
               alt="Hazard" 
-              className="w-full object-cover h-[250px]" 
+              className="w-full h-64 object-cover border-b-4 border-black" 
             />
           </div>
         )}
@@ -123,7 +126,7 @@ const IssueDetail = ({ issueId, userLocation, onBack }) => {
             </span>
           </div>
 
-          <div className="flex items-center gap-2 font-mono font-bold text-sm border-2 border-black p-2 bg-gray-100 self-start">
+          <div className="inline-flex items-center gap-2 font-mono text-xs border-2 border-black bg-white px-2 py-1 mt-2 font-bold self-start">
             <MapPin size={16} strokeWidth={3} />
             <span>{issue.latitude.toFixed(4)}, {issue.longitude.toFixed(4)}</span>
             {distance !== null && <span className="ml-2">({Math.round(distance)}M AWAY)</span>}
@@ -162,7 +165,22 @@ const IssueDetail = ({ issueId, userLocation, onBack }) => {
 
         {error && <p className="font-black uppercase text-red-600 bg-red-100 border-4 border-red-600 p-2 text-center">{error}</p>}
 
-        {isEscalated && issue.escalation_data && (
+        {issue.upvote_count < ESCALATION_THRESHOLD ? (
+          <div className="border-t-4 border-black pt-6">
+            <div className="border-4 border-black p-4 bg-white text-center font-mono font-bold text-sm tracking-tight">
+              🔓 ESCALATION SUITE UNLOCKS AT {ESCALATION_THRESHOLD} UPVOTES (CURRENT: {issue.upvote_count})
+            </div>
+          </div>
+        ) : !isEscalatedGenerated ? (
+          <div className="border-t-4 border-black pt-6">
+            <button
+              onClick={() => setIsEscalatedGenerated(true)}
+              className="w-full bg-black text-white text-md font-black border-4 border-black py-3 uppercase tracking-wider transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,0.3)] hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-x-0 active:translate-y-0"
+            >
+              🔥 GENERATE ESCALATION SUITE
+            </button>
+          </div>
+        ) : issue.escalation_data && (
           <div className="border-t-4 border-black pt-6 flex flex-col gap-6">
             <h2 className="text-2xl font-black uppercase flex items-center gap-2">
               <AlertTriangle size={24} strokeWidth={3} /> CIVIC ACTION SUITE
@@ -181,7 +199,7 @@ const IssueDetail = ({ issueId, userLocation, onBack }) => {
               </div>
               <textarea 
                 readOnly 
-                className="border-2 border-black p-2 font-mono font-bold w-full bg-gray-50 focus:outline-none resize-none" 
+                className="p-3 font-mono text-sm bg-white border-2 border-black w-full resize-none focus:outline-none" 
                 rows="6"
                 value={issue.escalation_data.formal_complaint}
               />
@@ -197,7 +215,7 @@ const IssueDetail = ({ issueId, userLocation, onBack }) => {
             <div className="border-4 border-black p-4 bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex flex-col gap-2">
               <h3 className="font-black uppercase flex items-center gap-2 text-lg mb-2"><MessageSquare size={20} strokeWidth={3}/> SOCIAL BROADCAST</h3>
               <textarea 
-                className="border-2 border-black p-2 font-mono font-bold w-full focus:outline-none bg-gray-50 resize-none" 
+                className="p-3 font-mono text-sm bg-white border-2 border-black w-full resize-none focus:outline-none" 
                 rows="3"
                 defaultValue={issue.escalation_data.social_draft}
                 id="social-draft"

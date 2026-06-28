@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { signInAnonymously } from './services/liveFirebase';
+import { onAuthStateChanged, signInWithPopup, signOut } from 'firebase/auth';
+import { auth, googleProvider } from './services/firebaseConfig';
 import LocationFeed from './components/LocationFeed';
 import SubmissionForm from './components/SubmissionForm';
 import IssueDetail from './components/IssueDetail';
-import { Settings, PlusCircle, List } from 'lucide-react';
+import { PlusCircle, List } from 'lucide-react';
 
 function App() {
   const [session, setSession] = useState(null);
@@ -13,11 +14,9 @@ function App() {
 
   useEffect(() => {
     // 1. Frictionless Identity Layer
-    const initAuth = async () => {
-      const { user } = await signInAnonymously();
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
       setSession(user);
-    };
-    initAuth();
+    });
 
     // 2. GPS Aggregation Engine
     if (navigator.geolocation) {
@@ -36,6 +35,8 @@ function App() {
         }
       );
     }
+
+    return () => unsubscribe();
   }, []);
 
   const navigate = (view, id = null) => {
@@ -45,9 +46,19 @@ function App() {
 
   if (!session) {
     return (
-      <div className="flex flex-col justify-center items-center h-screen bg-white text-black font-black uppercase text-xl">
-        <div className="spinner mb-4 border-black"></div>
-        <p className="border-4 border-black p-4 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] bg-white">Initializing Session...</p>
+      <div className="flex flex-col justify-center items-center h-screen bg-white text-black font-sans px-4">
+        <h1 className="text-7xl font-black tracking-tighter uppercase mb-4 text-black text-center">
+          CIVIC PULSE
+        </h1>
+        <p className="font-mono font-bold uppercase mb-12 text-center text-xl max-w-lg">
+          HYPERLOCAL CIVIC ENGAGEMENT. REAL-TIME VERIFIED FEED.
+        </p>
+        <button
+          onClick={() => signInWithPopup(auth, googleProvider)}
+          className="bg-white text-black text-xl font-black border-4 border-black px-8 py-4 uppercase tracking-wider transition-all shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:-translate-x-1 hover:-translate-y-1 hover:shadow-[10px_10px_0px_0px_rgba(0,0,0,1)] active:translate-x-0 active:translate-y-0 active:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
+        >
+          Sign In With Google
+        </button>
       </div>
     );
   }
@@ -55,16 +66,29 @@ function App() {
   return (
     <div className="pb-24 bg-white min-h-screen text-black font-sans">
       {/* Top Navbar */}
-      <nav className="border-b-4 border-black bg-white sticky top-0 z-50">
-        <div className="p-4 flex justify-between items-center">
-          <div className="font-black uppercase tracking-tight text-2xl flex items-center gap-2">
-            <span className="text-black text-3xl">●</span> CIVICPULSE
-          </div>
+      <nav className="border-b-4 border-black px-6 py-4 flex justify-between items-center bg-white sticky top-0 z-50">
+        <div className="font-black uppercase tracking-tight text-2xl flex items-center gap-2">
+          <span className="text-black text-3xl">●</span> CIVICPULSE
+        </div>
+        <div className="flex items-center gap-4">
+          {session.photoURL && (
+            <img 
+              src={session.photoURL} 
+              alt="User Avatar" 
+              className="border-2 border-black w-10 h-10 object-cover" 
+            />
+          )}
+          <button 
+            onClick={() => signOut(auth)}
+            className="font-mono text-xs border-2 border-black uppercase font-bold px-3 py-1 bg-white hover:bg-black hover:text-white transition-colors"
+          >
+            Logout
+          </button>
         </div>
       </nav>
 
       {/* Main Content Area */}
-      <main className="p-4 max-w-2xl mx-auto">
+      <main className="max-w-xl mx-auto px-4 pb-24 w-full box-border">
         {currentView === 'feed' && (
           <LocationFeed 
             userLocation={userLocation} 

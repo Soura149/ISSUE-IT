@@ -1,12 +1,8 @@
-import { signInAnonymously as firebaseSignInAnonymously } from 'firebase/auth';
-import { collection, doc, getDocs, getDoc, setDoc, updateDoc, runTransaction } from 'firebase/firestore';
+import { collection, doc, getDocs, getDoc, setDoc, runTransaction } from 'firebase/firestore';
 import { auth, db } from './firebaseConfig';
 import { GoogleGenAI } from '@google/genai';
 
 // Phase 1: Identity Layer
-export const signInAnonymously = async () => {
-  return await firebaseSignInAnonymously(auth);
-};
 
 export const getSessionId = () => {
   return auth.currentUser ? auth.currentUser.uid : null;
@@ -50,11 +46,13 @@ export const getIssue = async (id) => {
 
 export const createIssue = async (issueData) => {
   const newIssueRef = doc(collection(db, "issues"));
+  const user = auth.currentUser;
   const newIssue = {
     ...issueData,
     upvote_count: 1,
     status: "open",
-    reporter_session_id: getSessionId(),
+    reporter_session_id: user ? user.uid : null,
+    reporter_name: user && user.displayName ? user.displayName : "Anonymous",
     created_at: new Date().toISOString()
   };
   await setDoc(newIssueRef, newIssue);
@@ -148,7 +146,7 @@ export const upvoteIssue = async (issueId, userLat, userLon) => {
       let escalationData = issue.escalation_data || null;
 
       // Escalation Engine Trigger
-      if (newUpvoteCount >= 3 && newStatus !== "escalated") { // Demo threshold = 3
+      if (newUpvoteCount >= 5 && newStatus !== "escalated") { // Demo threshold = 5
         newStatus = "escalated";
         escalationData = {
           formal_complaint: `To the Municipal Commissioner,\n\nWe urgently bring to your attention a ${issue.category} at coordinates (${issue.latitude}, ${issue.longitude}). This hazard has been formally co-signed and verified by local residents. Immediate structural intervention is demanded to prevent further risk to public safety.\n\nSincerely,\nConcerned Citizens`,
