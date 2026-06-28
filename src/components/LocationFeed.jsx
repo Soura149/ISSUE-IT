@@ -25,6 +25,8 @@ const LocationFeed = ({ userLocation, onSelectIssue, isDarkMode }) => {
             );
             return dist <= 1000;
           });
+        } else if (feedType === 'process') {
+          displayIssues = allIssues.filter(issue => issue.status === 'UNDER_PROCESS');
         }
         
         displayIssues.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
@@ -53,10 +55,10 @@ const LocationFeed = ({ userLocation, onSelectIssue, isDarkMode }) => {
         <div className="flex justify-between items-end">
           <div>
             <h1 className="text-4xl font-black uppercase tracking-tight leading-none">
-              {feedType === 'local' ? 'Local Feed' : 'Global Feed'}
+              {feedType === 'local' ? 'Local Feed' : feedType === 'global' ? 'Global Feed' : 'Verification'}
             </h1>
             <p className="font-mono font-bold uppercase mt-2">
-              {feedType === 'local' ? 'Showing issues within 1km' : 'Showing all global issues'}
+              {feedType === 'local' ? 'Showing issues within 1km' : feedType === 'global' ? 'Showing all global issues' : 'Awaiting community consensus'}
             </p>
           </div>
           <div className={`font-mono border-2 px-2 py-0.5 text-xs font-bold uppercase flex items-center gap-1 ${isDarkMode ? 'border-white bg-zinc-900 shadow-[2px_2px_0px_0px_rgba(255,255,255,1)] text-white' : 'border-black bg-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] text-black'}`}>
@@ -65,22 +67,30 @@ const LocationFeed = ({ userLocation, onSelectIssue, isDarkMode }) => {
           </div>
         </div>
         
-        <div className="flex gap-4">
+        <div className="flex gap-2 flex-wrap">
           <button
             onClick={() => setFeedType('local')}
             className={feedType === 'local' 
-              ? `px-4 py-2 border-4 font-black uppercase text-sm tracking-tight ${isDarkMode ? 'bg-white text-black border-white' : 'bg-black text-white border-black'}`
-              : `px-4 py-2 border-4 font-black uppercase text-sm tracking-tight hover:-translate-y-0.5 transition-all ${isDarkMode ? 'bg-zinc-900 text-white border-white shadow-[2px_2px_0px_0px_rgba(255,255,255,1)] hover:bg-white hover:text-black' : 'bg-white text-black border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-black hover:text-white'}`}
+              ? `px-3 py-2 border-4 font-black uppercase text-xs tracking-tight ${isDarkMode ? 'bg-white text-black border-white' : 'bg-black text-white border-black'}`
+              : `px-3 py-2 border-4 font-black uppercase text-xs tracking-tight hover:-translate-y-0.5 transition-all ${isDarkMode ? 'bg-zinc-900 text-white border-white shadow-[2px_2px_0px_0px_rgba(255,255,255,1)] hover:bg-white hover:text-black' : 'bg-white text-black border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-black hover:text-white'}`}
           >
-            LOCAL FEED
+            LOCAL
           </button>
           <button
             onClick={() => setFeedType('global')}
             className={feedType === 'global' 
-              ? `px-4 py-2 border-4 font-black uppercase text-sm tracking-tight ${isDarkMode ? 'bg-white text-black border-white' : 'bg-black text-white border-black'}`
-              : `px-4 py-2 border-4 font-black uppercase text-sm tracking-tight hover:-translate-y-0.5 transition-all ${isDarkMode ? 'bg-zinc-900 text-white border-white shadow-[2px_2px_0px_0px_rgba(255,255,255,1)] hover:bg-white hover:text-black' : 'bg-white text-black border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-black hover:text-white'}`}
+              ? `px-3 py-2 border-4 font-black uppercase text-xs tracking-tight ${isDarkMode ? 'bg-white text-black border-white' : 'bg-black text-white border-black'}`
+              : `px-3 py-2 border-4 font-black uppercase text-xs tracking-tight hover:-translate-y-0.5 transition-all ${isDarkMode ? 'bg-zinc-900 text-white border-white shadow-[2px_2px_0px_0px_rgba(255,255,255,1)] hover:bg-white hover:text-black' : 'bg-white text-black border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-black hover:text-white'}`}
           >
-            GLOBAL FEED
+            GLOBAL
+          </button>
+          <button
+            onClick={() => setFeedType('process')}
+            className={feedType === 'process' 
+              ? `px-3 py-2 border-4 font-black uppercase text-xs tracking-tight bg-[#FFCC00] text-black border-black`
+              : `px-3 py-2 border-4 font-black uppercase text-xs tracking-tight hover:-translate-y-0.5 transition-all ${isDarkMode ? 'bg-zinc-900 text-white border-white shadow-[2px_2px_0px_0px_rgba(255,255,255,1)] hover:bg-[#FFCC00] hover:text-black hover:border-black' : 'bg-white text-black border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-[#FFCC00] hover:text-black'}`}
+          >
+            IN PROCESS
           </button>
         </div>
       </div>
@@ -109,7 +119,7 @@ const LocationFeed = ({ userLocation, onSelectIssue, isDarkMode }) => {
                     <span className={`font-mono text-xs font-black uppercase border-2 px-3 py-1 tracking-tight ${isDarkMode ? 'shadow-[2px_2px_0px_0px_rgba(255,255,255,1)]' : 'shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]'} ${getSeverityStyles(issue.severity)}`}>
                       {issue.category}
                     </span>
-                    <span className={`font-mono border-2 px-2 py-0.5 text-[10px] font-bold uppercase ${isDarkMode ? 'shadow-[2px_2px_0px_0px_rgba(255,255,255,1)] border-white' : 'shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] border-black'} ${issue.status === 'SOLVED' ? 'bg-[#00FF66] text-black' : issue.status === 'escalated' ? (isDarkMode ? 'bg-white text-black' : 'bg-black text-white') : (isDarkMode ? 'bg-zinc-900 text-white' : 'bg-white text-black')}`}>
+                    <span className={`font-mono border-2 px-2 py-0.5 text-[10px] font-bold uppercase ${isDarkMode ? 'shadow-[2px_2px_0px_0px_rgba(255,255,255,1)] border-white' : 'shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] border-black'} ${issue.status === 'UNDER_PROCESS' ? 'bg-[#FFCC00] text-black' : issue.status === 'SOLVED' ? 'bg-[#00FF66] text-black' : issue.status === 'escalated' ? (isDarkMode ? 'bg-white text-black' : 'bg-black text-white') : (isDarkMode ? 'bg-zinc-900 text-white' : 'bg-white text-black')}`}>
                       {issue.status}
                     </span>
                   </div>
@@ -155,7 +165,7 @@ const LocationFeed = ({ userLocation, onSelectIssue, isDarkMode }) => {
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className={`font-mono border-2 px-2 py-0.5 text-[10px] font-bold uppercase ${isDarkMode ? 'shadow-[2px_2px_0px_0px_rgba(255,255,255,1)] border-white' : 'shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] border-black'} ${issue.status === 'SOLVED' ? 'bg-[#00FF66] text-black' : issue.status === 'escalated' ? (isDarkMode ? 'bg-white text-black' : 'bg-black text-white') : (isDarkMode ? 'bg-zinc-900 text-white' : 'bg-white text-black')}`}>
+                      <span className={`font-mono border-2 px-2 py-0.5 text-[10px] font-bold uppercase ${isDarkMode ? 'shadow-[2px_2px_0px_0px_rgba(255,255,255,1)] border-white' : 'shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] border-black'} ${issue.status === 'UNDER_PROCESS' ? 'bg-[#FFCC00] text-black' : issue.status === 'SOLVED' ? 'bg-[#00FF66] text-black' : issue.status === 'escalated' ? (isDarkMode ? 'bg-white text-black' : 'bg-black text-white') : (isDarkMode ? 'bg-zinc-900 text-white' : 'bg-white text-black')}`}>
                         {issue.status}
                       </span>
                     </div>

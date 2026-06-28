@@ -63,8 +63,8 @@ export const createIssue = async (issueData) => {
     ...issueData,
     location_name: issueData.locationName || 'Unknown Location',
     upvote_count: 1,
-    status: "open",
-    reporter_session_id: user ? user.uid : null,
+    status: "OPEN",
+    reporter_session_id: getSessionId(),
     reporter_name: user && user.displayName ? user.displayName : "Anonymous",
     created_at: new Date().toISOString()
   };
@@ -197,9 +197,9 @@ export const upvoteIssue = async (issueId, userLat, userLon) => {
   }
 };
 
-export const resolveIssue = async (issueId) => {
+export const submitResolutionProof = async (issueId, imageUrl) => {
   const uid = getSessionId();
-  if (!uid) throw new Error("Must be logged in to resolve issue");
+  if (!uid) throw new Error("Must be logged in to submit proof");
   
   const issueRef = doc(db, "issues", issueId);
 
@@ -212,12 +212,68 @@ export const resolveIssue = async (issueId) => {
       
       const issue = issueDoc.data();
 
-      if (issue.reporter_session_id !== uid) {
-        throw new Error("Only the creator can mark this issue as resolved.");
+      const issueUpdates = {
+        status: "UNDER_PROCESS",
+        resolved_image_url: imageUrl,
+        verification_upvotes: 0
+      };
+      
+      transaction.update(issueRef, issueUpdates);
+      return { id: issueId, ...issue, ...issueUpdates };
+    });
+
+    return updatedIssueData;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const vouchForResolution = async (issueId) => {
+  const uid = getSessionId();
+  if (!uid) throw new Error("Must be logged in to vouch for resolution");
+
+  const vouchId = `${issueId}_vouch_${uid}`;
+  const vouchRef = doc(db, "upvotes", vouchId); 
+  const issueRef = doc(db, "issues", issueId);
+
+  try {
+    const updatedIssueData = await runTransaction(db, async (transaction) => {
+      const vouchDoc = await transaction.get(vouchRef);
+      if (vouchDoc.exists()) {
+        throw new Error("Already vouched for this resolution");
       }
 
+      const issueDoc = await transaction.get(issueRef);
+      if (!issueDoc.exists()) {
+        throw new Error("Issue not found");
+      }
+      
+      const issue = issueDoc.data();
+
+      if (issue.reporter_session_id === uid) {
+        throw new Error("You cannot vouch for your own resolution.");
+      }
+
+      if (issue.status !== "UNDER_PROCESS") {
+        throw new Error("Issue is not under verification process.");
+      }
+
+      let newVerificationUpvotes = (issue.verification_upvotes || 0) + 1;
+      let newStatus = issue.status;
+
+      if (newVerificationUpvotes >= 3) {
+        newStatus = "SOLVED";
+      }
+
+      transaction.set(vouchRef, {
+        issue_id: issueId,
+        user_id: uid,
+        timestamp: new Date().toISOString()
+      });
+
       const issueUpdates = {
-        status: "SOLVED"
+        verification_upvotes: newVerificationUpvotes,
+        status: newStatus
       };
       
       transaction.update(issueRef, issueUpdates);

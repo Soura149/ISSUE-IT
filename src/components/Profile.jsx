@@ -21,9 +21,10 @@ const Profile = ({ session, isDarkMode, onSelectIssue }) => {
     fetchIssues();
   }, [session]);
 
-  const activeIssues = issues.filter(i => i.status !== 'SOLVED');
+  const activeIssues = issues.filter(i => i.status !== 'SOLVED' && i.status !== 'UNDER_PROCESS');
+  const underProcessIssues = issues.filter(i => i.status === 'UNDER_PROCESS');
   const resolvedIssues = issues.filter(i => i.status === 'SOLVED');
-  const userXP = (activeIssues.length * 10) + (resolvedIssues.length * 50);
+  const userXP = (activeIssues.length * 10) + (underProcessIssues.length * 20) + (resolvedIssues.length * 50);
 
   const renderIssueList = (list) => {
     if (list.length === 0) {
@@ -47,7 +48,7 @@ const Profile = ({ session, isDarkMode, onSelectIssue }) => {
                 <AlertTriangle size={12} strokeWidth={3} />
                 {issue.category}
               </span>
-              <span className={`font-mono border-2 px-2 py-0.5 text-[10px] font-bold uppercase ${isDarkMode ? 'shadow-[2px_2px_0px_0px_rgba(255,255,255,1)] border-white' : 'shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] border-black'} ${issue.status === 'SOLVED' ? 'bg-[#00FF66] text-black' : issue.status === 'escalated' ? (isDarkMode ? 'bg-white text-black' : 'bg-black text-white') : (isDarkMode ? 'bg-zinc-900 text-white' : 'bg-white text-black')}`}>
+              <span className={`font-mono border-2 px-2 py-0.5 text-[10px] font-bold uppercase ${isDarkMode ? 'shadow-[2px_2px_0px_0px_rgba(255,255,255,1)] border-white' : 'shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] border-black'} ${issue.status === 'UNDER_PROCESS' ? 'bg-[#FFCC00] text-black' : issue.status === 'SOLVED' ? 'bg-[#00FF66] text-black' : issue.status === 'escalated' ? (isDarkMode ? 'bg-white text-black' : 'bg-black text-white') : (isDarkMode ? 'bg-zinc-900 text-white' : 'bg-white text-black')}`}>
                 {issue.status}
               </span>
             </div>
@@ -97,22 +98,30 @@ const Profile = ({ session, isDarkMode, onSelectIssue }) => {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-4 mt-2">
+      <div className="flex gap-2 mt-2 flex-wrap">
         <button
           onClick={() => setActiveTab('active')}
           className={activeTab === 'active' 
-            ? `flex-1 px-4 py-3 border-4 font-black uppercase text-sm tracking-tight ${isDarkMode ? 'bg-white text-black border-white' : 'bg-black text-white border-black'}`
-            : `flex-1 px-4 py-3 border-4 font-black uppercase text-sm tracking-tight hover:-translate-y-0.5 transition-all ${isDarkMode ? 'bg-zinc-900 text-white border-white shadow-[2px_2px_0px_0px_rgba(255,255,255,1)] hover:bg-white hover:text-black' : 'bg-white text-black border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-black hover:text-white'}`}
+            ? `flex-1 min-w-[100px] px-2 py-3 border-4 font-black uppercase text-xs tracking-tight ${isDarkMode ? 'bg-white text-black border-white' : 'bg-black text-white border-black'}`
+            : `flex-1 min-w-[100px] px-2 py-3 border-4 font-black uppercase text-xs tracking-tight hover:-translate-y-0.5 transition-all ${isDarkMode ? 'bg-zinc-900 text-white border-white shadow-[2px_2px_0px_0px_rgba(255,255,255,1)] hover:bg-white hover:text-black' : 'bg-white text-black border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-black hover:text-white'}`}
         >
-          ACTIVE REPORTS ({activeIssues.length})
+          ACTIVE ({activeIssues.length})
+        </button>
+        <button
+          onClick={() => setActiveTab('process')}
+          className={activeTab === 'process' 
+            ? `flex-1 min-w-[100px] px-2 py-3 border-4 font-black uppercase text-xs tracking-tight bg-[#FFCC00] text-black border-black`
+            : `flex-1 min-w-[100px] px-2 py-3 border-4 font-black uppercase text-xs tracking-tight hover:-translate-y-0.5 transition-all ${isDarkMode ? 'bg-zinc-900 text-white border-white shadow-[2px_2px_0px_0px_rgba(255,255,255,1)] hover:bg-[#FFCC00] hover:text-black hover:border-black' : 'bg-white text-black border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-[#FFCC00] hover:text-black'}`}
+        >
+          IN PROCESS ({underProcessIssues.length})
         </button>
         <button
           onClick={() => setActiveTab('resolved')}
           className={activeTab === 'resolved' 
-            ? `flex-1 px-4 py-3 border-4 font-black uppercase text-sm tracking-tight ${isDarkMode ? 'bg-white text-black border-white' : 'bg-black text-white border-black'}`
-            : `flex-1 px-4 py-3 border-4 font-black uppercase text-sm tracking-tight hover:-translate-y-0.5 transition-all ${isDarkMode ? 'bg-zinc-900 text-white border-white shadow-[2px_2px_0px_0px_rgba(255,255,255,1)] hover:bg-white hover:text-black' : 'bg-white text-black border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-black hover:text-white'}`}
+            ? `flex-1 min-w-[100px] px-2 py-3 border-4 font-black uppercase text-xs tracking-tight bg-[#00FF66] text-black border-black`
+            : `flex-1 min-w-[100px] px-2 py-3 border-4 font-black uppercase text-xs tracking-tight hover:-translate-y-0.5 transition-all ${isDarkMode ? 'bg-zinc-900 text-white border-white shadow-[2px_2px_0px_0px_rgba(255,255,255,1)] hover:bg-[#00FF66] hover:text-black hover:border-black' : 'bg-white text-black border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-[#00FF66] hover:text-black'}`}
         >
-          RESOLVED RECORDS ({resolvedIssues.length})
+          RESOLVED ({resolvedIssues.length})
         </button>
       </div>
 
@@ -123,7 +132,7 @@ const Profile = ({ session, isDarkMode, onSelectIssue }) => {
             <div className={`spinner ${isDarkMode ? 'border-white' : 'border-black'}`}></div>
           </div>
         ) : (
-          renderIssueList(activeTab === 'active' ? activeIssues : resolvedIssues)
+          renderIssueList(activeTab === 'active' ? activeIssues : activeTab === 'process' ? underProcessIssues : resolvedIssues)
         )}
       </div>
     </div>

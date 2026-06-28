@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { getIssue, upvoteIssue, calculateDistance, getSessionId, resolveIssue } from '../services/liveFirebase';
+import { getIssue, upvoteIssue, calculateDistance, getSessionId, submitResolutionProof, vouchForResolution } from '../services/liveFirebase';
+import { uploadImageToCloudinary } from '../services/cloudinary';
 import { generateImpactCard } from './CanvasRenderer';
 import { AlertTriangle, MapPin, Share2, Copy, ThumbsUp, ArrowLeft, Mail, MessageSquare } from 'lucide-react';
 import { getSeverityStyles } from '../utils/theme';
@@ -14,6 +15,9 @@ const IssueDetail = ({ issueId, userLocation, onBack, isDarkMode }) => {
   const [distance, setDistance] = useState(null);
   const [cardImage, setCardImage] = useState(null);
   const [isEscalatedGenerated, setIsEscalatedGenerated] = useState(false);
+  const [uploadingProof, setUploadingProof] = useState(false);
+  const [cvSimulating, setCvSimulating] = useState(false);
+  const [vouching, setVouching] = useState(false);
 
   useEffect(() => {
     const fetchIssue = async () => {
@@ -48,17 +52,46 @@ const IssueDetail = ({ issueId, userLocation, onBack, isDarkMode }) => {
     }
   };
 
-  const handleResolve = async () => {
-    setLoading(true);
+  const handleProofUpload = async (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+
+    setUploadingProof(true);
     setError('');
     try {
-      await resolveIssue(issueId);
+      const imageUrl = await uploadImageToCloudinary(file);
+      setUploadingProof(false);
+      setCvSimulating(true);
+      
+      setTimeout(async () => {
+        try {
+          await submitResolutionProof(issueId, imageUrl);
+          const data = await getIssue(issueId);
+          setIssue(data);
+        } catch (err) {
+          setError(err.message);
+        } finally {
+          setCvSimulating(false);
+        }
+      }, 1500);
+
+    } catch (err) {
+      setError(err.message);
+      setUploadingProof(false);
+    }
+  };
+
+  const handleVouch = async () => {
+    setVouching(true);
+    setError('');
+    try {
+      await vouchForResolution(issueId);
       const data = await getIssue(issueId);
       setIssue(data);
     } catch (err) {
       setError(err.message);
     } finally {
-      setLoading(false);
+      setVouching(false);
     }
   };
 
@@ -107,6 +140,7 @@ const IssueDetail = ({ issueId, userLocation, onBack, isDarkMode }) => {
 
   const isEscalated = issue.status === 'escalated';
   const isSolved = issue.status === 'SOLVED';
+  const isUnderProcess = issue.status === 'UNDER_PROCESS';
   const isTooFar = distance !== null && distance > 500000;
   const currentUserId = getSessionId();
   const isPoster = issue.reporter_session_id === currentUserId;
@@ -139,7 +173,7 @@ const IssueDetail = ({ issueId, userLocation, onBack, isDarkMode }) => {
               <AlertTriangle size={32} strokeWidth={3} />
               <h1 className={`text-3xl font-black uppercase px-3 py-1 border-2 ${isDarkMode ? 'border-white shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]' : 'border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]'} ${getSeverityStyles(issue.severity)}`}>{issue.category}</h1>
             </div>
-            <span className={`font-mono border-2 px-2 py-0.5 text-xs font-bold uppercase ${isDarkMode ? 'border-white shadow-[2px_2px_0px_0px_rgba(255,255,255,1)]' : 'border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]'} ${isEscalated ? (isDarkMode ? 'bg-white text-black' : 'bg-black text-white') : (isDarkMode ? 'bg-zinc-900 text-white' : 'bg-white text-black')}`}>
+            <span className={`font-mono border-2 px-2 py-0.5 text-xs font-bold uppercase ${isDarkMode ? 'border-white shadow-[2px_2px_0px_0px_rgba(255,255,255,1)]' : 'border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]'} ${isUnderProcess ? 'bg-[#FFCC00] text-black' : isSolved ? 'bg-[#00FF66] text-black' : isEscalated ? (isDarkMode ? 'bg-white text-black' : 'bg-black text-white') : (isDarkMode ? 'bg-zinc-900 text-white' : 'bg-white text-black')}`}>
               {issue.status}
             </span>
           </div>
@@ -156,12 +190,25 @@ const IssueDetail = ({ issueId, userLocation, onBack, isDarkMode }) => {
           <p className="font-bold text-lg">{issue.description}</p>
         </div>
 
+        {issue.status === 'UNDER_PROCESS' && issue.resolved_image_url && (
+          <div className={`border-t-4 pt-4 grid grid-cols-2 gap-4 ${isDarkMode ? 'border-white' : 'border-black'}`}>
+            <div className="flex flex-col gap-2">
+              <span className={`font-mono text-xs font-bold uppercase text-center border-2 px-2 py-1 ${isDarkMode ? 'bg-zinc-800 border-white text-white' : 'bg-gray-100 border-black text-black'}`}>Original Hazard</span>
+              <img src={issue.photo_url} alt="Original" className={`w-full h-40 object-cover border-4 ${isDarkMode ? 'border-white' : 'border-black'}`} />
+            </div>
+            <div className="flex flex-col gap-2">
+              <span className={`font-mono text-xs font-bold uppercase text-center border-2 px-2 py-1 bg-[#00FF66] border-black text-black`}>Resolution Proof</span>
+              <img src={issue.resolved_image_url} alt="Resolution" className={`w-full h-40 object-cover border-4 ${isDarkMode ? 'border-white' : 'border-black'}`} />
+            </div>
+          </div>
+        )}
+
         <div className={`border-t-4 pt-4 pb-4 flex items-center justify-between ${isDarkMode ? 'border-white' : 'border-black'}`}>
           <div className={`font-black uppercase text-xl border-4 px-4 py-2 ${isDarkMode ? 'bg-zinc-800 border-white text-white' : 'bg-gray-100 border-black text-black'}`}>
             UPVOTES: <span className="text-2xl">{issue.upvote_count}</span>
           </div>
           
-          {!isEscalated && !isSolved && (
+          {!isEscalated && !isSolved && !isUnderProcess && (
             <div className="relative group">
               <button 
                 onClick={handleUpvote} 
@@ -186,7 +233,26 @@ const IssueDetail = ({ issueId, userLocation, onBack, isDarkMode }) => {
           )}
         </div>
 
-        {error && <p className={`font-black uppercase text-red-600 border-4 border-red-600 p-2 text-center ${isDarkMode ? 'bg-red-950' : 'bg-red-100'}`}>{error}</p>}
+        {(issue.status === 'OPEN' || issue.status === 'open') && (
+          <div className={`border-4 p-4 mt-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] ${isDarkMode ? 'border-white bg-zinc-900 shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]' : 'border-black bg-white'}`}>
+            <h3 className="font-mono font-black text-sm mb-2">⚡ RESOLVE THIS ISSUE</h3>
+            <p className={`font-mono text-xs mb-4 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+              Are you on-site? Upload a photo showing the cleared or fixed area to send this into community verification.
+            </p>
+            {uploadingProof || cvSimulating ? (
+              <div className={`w-full block text-center font-mono font-bold text-xs border-4 p-3 uppercase tracking-wider ${isDarkMode ? 'bg-zinc-800 border-white text-white' : 'bg-gray-100 border-black text-black'}`}>
+                ⏳ Analyzing image differences via Vision API...
+              </div>
+            ) : (
+              <label className={`w-full block text-center font-mono font-bold text-xs border-4 p-3 uppercase cursor-pointer transition-colors tracking-wider ${isDarkMode ? 'bg-black text-white border-white hover:bg-white hover:text-black' : 'bg-white text-black border-black hover:bg-black hover:text-white'}`}>
+                📸 CHOOSE RESOLUTION PHOTO
+                <input type="file" className="hidden" accept="image/*" onChange={handleProofUpload} />
+              </label>
+            )}
+          </div>
+        )}
+
+        {error && <p className={`font-black uppercase text-red-600 border-4 border-red-600 p-2 text-center mt-4 ${isDarkMode ? 'bg-red-950' : 'bg-red-100'}`}>{error}</p>}
 
         {isSolved ? (
           <div className={`border-t-4 pt-6 ${isDarkMode ? 'border-white' : 'border-black'}`}>
@@ -194,15 +260,30 @@ const IssueDetail = ({ issueId, userLocation, onBack, isDarkMode }) => {
               🎉 COMMUNITY RESOLVED
             </div>
           </div>
-        ) : isPoster ? (
-          <div className={`border-t-4 pt-6 ${isDarkMode ? 'border-white' : 'border-black'}`}>
-            <button 
-              onClick={handleResolve}
-              className={`w-full bg-[#00FF66] text-black font-black border-4 py-3 uppercase tracking-wider transition-all hover:-translate-y-0.5 ${isDarkMode ? 'border-white shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]' : 'border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]'}`}
-            >
-              ✅ MARK AS RESOLVED
-            </button>
-          </div>
+        ) : isUnderProcess ? (
+           !isPoster ? (
+             <div className={`border-t-4 pt-6 flex flex-col gap-2 ${isDarkMode ? 'border-white' : 'border-black'}`}>
+                <div className={`font-mono text-center text-sm font-bold p-2 border-2 ${isDarkMode ? 'border-white bg-zinc-900 text-white' : 'border-black bg-white text-black'}`}>
+                   VERIFICATION VOTES: {issue.verification_upvotes || 0} / 3
+                </div>
+                <button 
+                  onClick={handleVouch}
+                  disabled={vouching}
+                  className={`w-full bg-[#FFCC00] text-black font-black border-4 py-3 uppercase tracking-wider transition-all hover:-translate-y-0.5 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] disabled:opacity-50`}
+                >
+                  {vouching ? 'VOUCHING...' : '👍 VOUCH FOR RESOLUTION'}
+                </button>
+             </div>
+           ) : (
+             <div className={`border-t-4 pt-6 flex flex-col gap-2 ${isDarkMode ? 'border-white' : 'border-black'}`}>
+                <div className={`font-mono text-center text-sm font-bold p-2 border-2 ${isDarkMode ? 'border-white bg-zinc-900 text-white' : 'border-black bg-white text-black'}`}>
+                   VERIFICATION VOTES: {issue.verification_upvotes || 0} / 3
+                </div>
+                <div className={`border-4 p-4 text-center font-black uppercase text-md ${isDarkMode ? 'bg-zinc-800 border-white text-white' : 'bg-gray-100 border-black text-black'}`}>
+                  Awaiting community verification...
+                </div>
+             </div>
+           )
         ) : issue.upvote_count < ESCALATION_THRESHOLD ? (
           <div className={`border-t-4 pt-6 ${isDarkMode ? 'border-white' : 'border-black'}`}>
             <div className={`border-4 p-4 text-center font-mono font-bold text-sm tracking-tight ${isDarkMode ? 'bg-zinc-900 border-white text-white' : 'bg-white border-black text-black'}`}>
