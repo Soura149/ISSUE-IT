@@ -7,17 +7,19 @@ import SubmissionForm from './components/SubmissionForm';
 import IssueDetail from './components/IssueDetail';
 import Profile from './components/Profile';
 import Leaderboard from './components/Leaderboard';
+import LandingPage from './components/LandingPage';
+import LoginModal from './components/LoginModal';
 import { Menu } from 'lucide-react';
 
 function App() {
   const [session, setSession] = useState(null);
+  const [isAuthLoading, setIsAuthLoading] = useState(true);
   const [userLocation, setUserLocation] = useState(null);
-  const [currentView, setCurrentView] = useState('feed'); // 'feed', 'submit', 'detail'
-  const [selectedIssueId, setSelectedIssueId] = useState(null);
-  const [selectedProfileId, setSelectedProfileId] = useState(null);
+  const [currentPath, setCurrentPath] = useState(window.location.pathname);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [totalIssuesCount, setTotalIssuesCount] = useState(0);
+  const [showLoginModal, setShowLoginModal] = useState(false);
 
   useEffect(() => {
     // 1. Frictionless Identity Layer
@@ -25,7 +27,9 @@ function App() {
       setSession(user);
       if (user) {
         syncUserProfile(user);
+        setShowLoginModal(false);
       }
+      setIsAuthLoading(false);
     });
 
     // 2. GPS Aggregation Engine
@@ -58,36 +62,80 @@ function App() {
     fetchGlobalStats();
 
     return () => unsubscribe();
-  }, [currentView]); // Re-fetch when view changes to update counts after submission
+  }, []);
 
-  const navigate = (view, id = null) => {
-    if (view === 'detail') setSelectedIssueId(id);
-    if (view === 'profile') setSelectedProfileId(id);
-    setCurrentView(view);
-    setIsSidebarOpen(false); // Close sidebar on navigation
+  // History API Routing Listener
+  useEffect(() => {
+    const handlePopState = () => {
+      setCurrentPath(window.location.pathname);
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  const navigateToPage = (path) => {
+    window.history.pushState({}, "", path);
+    setCurrentPath(path);
+    setIsSidebarOpen(false);
   };
 
-  if (!session) {
+  // Route Guarding
+  useEffect(() => {
+    if (isAuthLoading) return;
+    
+    // Unauthenticated protection
+    if (!session && currentPath !== '/') {
+      navigateToPage('/');
+    }
+    
+    // Authenticated redirect from landing
+    if (session && currentPath === '/') {
+      navigateToPage('/feed');
+    }
+  }, [isAuthLoading, session, currentPath]);
+
+  // Derived state from currentPath
+  const pathParts = currentPath.split('/').filter(Boolean);
+  const view = pathParts[0] || 'landing';
+  const detailId = pathParts[1] || null;
+
+  if (isAuthLoading) {
     return (
-      <div className="flex flex-col justify-center items-center h-screen bg-white text-black font-sans px-4">
-        <h1 className="text-7xl font-black tracking-tighter uppercase mb-4 text-black text-center">
-          CIVIC PULSE
-        </h1>
-        <p className="font-mono font-bold uppercase mb-12 text-center text-xl max-w-lg">
-          HYPERLOCAL CIVIC ENGAGEMENT. REAL-TIME VERIFIED FEED.
-        </p>
-        <button
-          onClick={() => signInWithPopup(auth, googleProvider)}
-          className="bg-white text-black text-xl font-black border-4 border-black px-8 py-4 uppercase tracking-wider transition-all shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:-translate-x-1 hover:-translate-y-1 hover:shadow-[10px_10px_0px_0px_rgba(0,0,0,1)] active:translate-x-0 active:translate-y-0 active:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
-        >
-          Sign In With Google
-        </button>
+      <div className={`flex items-center justify-center h-screen ${isDarkMode ? 'bg-black text-white dark' : 'bg-white text-black'}`}>
+        <div className="spinner border-black dark:border-white"></div>
       </div>
     );
   }
 
+  if (!session) {
+    return (
+      <div className={isDarkMode ? 'dark' : ''}>
+        <LandingPage 
+          onLogin={() => setShowLoginModal(true)} 
+          isDarkMode={isDarkMode} 
+          setIsDarkMode={setIsDarkMode} 
+        />
+        {showLoginModal && (
+          <LoginModal 
+            onSignIn={() => signInWithPopup(auth, googleProvider)} 
+            onClose={() => setShowLoginModal(false)}
+          />
+        )}
+      </div>
+    );
+  }
+
+  // For unmatched routes, gracefully fallback to feed if authenticated
+  const isValidView = ['feed', 'post', 'detail', 'profile', 'leaderboard'].includes(view);
+  if (!isValidView && session) {
+    navigateToPage('/feed');
+    return null;
+  }
+
   return (
-    <div className={`w-full min-h-screen px-2 sm:px-4 md:px-8 box-border overflow-x-hidden ${isDarkMode ? 'bg-black text-white' : 'bg-white text-black'} font-sans transition-colors duration-300`}>
+    <div className={isDarkMode ? 'dark' : ''}>
+      <div className={`w-full min-h-screen px-2 sm:px-4 md:px-8 box-border overflow-x-hidden ${isDarkMode ? 'bg-black text-white' : 'bg-white text-black'} font-sans transition-colors duration-300`}>
       {/* Sidebar Backdrop Overlay */}
       {isSidebarOpen && (
         <div 
@@ -113,25 +161,25 @@ function App() {
           {/* Navigation Links Group */}
           <div className="flex flex-col">
             <button 
-              onClick={() => navigate('feed')}
+              onClick={() => navigateToPage('/feed')}
               className={`font-mono text-xl text-left font-black p-4 border-b-2 uppercase transition-all cursor-pointer truncate ${isDarkMode ? 'border-white hover:bg-white hover:text-black' : 'border-black hover:bg-black hover:text-white'}`}
             >
               FEEDS DASHBOARD
             </button>
             <button 
-              onClick={() => navigate('submit')}
+              onClick={() => navigateToPage('/post')}
               className={`font-mono text-xl text-left font-black p-4 border-b-2 uppercase transition-all cursor-pointer truncate ${isDarkMode ? 'border-white hover:bg-white hover:text-black' : 'border-black hover:bg-black hover:text-white'}`}
             >
               POST AN ISSUE
             </button>
             <button 
-              onClick={() => navigate('leaderboard')}
+              onClick={() => navigateToPage('/leaderboard')}
               className={`font-mono text-xl text-left font-black p-4 border-b-2 uppercase transition-all cursor-pointer truncate ${isDarkMode ? 'border-white hover:bg-white hover:text-black' : 'border-black hover:bg-black hover:text-white'}`}
             >
               LEADERBOARD RANKINGS
             </button>
             <button 
-              onClick={() => navigate('profile')}
+              onClick={() => navigateToPage('/profile')}
               className={`font-mono text-xl text-left font-black p-4 border-b-2 uppercase transition-all cursor-pointer truncate ${isDarkMode ? 'border-white hover:bg-white hover:text-black' : 'border-black hover:bg-black hover:text-white'}`}
             >
               PROFILE INFO
@@ -152,6 +200,7 @@ function App() {
               <img 
                 src={session.photoURL} 
                 className="w-10 h-10 border-2 border-black dark:border-white object-cover" 
+                alt="Profile"
               />
             ) : (
               <div className="w-10 h-10 bg-black text-white dark:bg-white dark:text-black flex items-center justify-center font-bold font-mono border-2 border-black dark:border-white">
@@ -167,6 +216,7 @@ function App() {
             onClick={() => {
               setIsSidebarOpen(false);
               signOut(auth);
+              navigateToPage('/');
             }}
             className={`w-full py-4 font-black border-t-4 tracking-widest transition-colors uppercase ${isDarkMode ? 'bg-white text-black border-white hover:bg-zinc-900 hover:text-white' : 'bg-black text-white border-black hover:bg-white hover:text-black'}`}
           >
@@ -194,40 +244,40 @@ function App() {
       <main className="w-full max-w-6xl mx-auto py-4 md:py-6 grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-8 items-start box-border">
         {/* Left/Center Column - Active Feed */}
         <div className="lg:col-span-2 w-full">
-          {currentView === 'feed' && (
+          {view === 'feed' && (
             <LocationFeed 
               userLocation={userLocation} 
-              onSelectIssue={(id) => navigate('detail', id)} 
+              onSelectIssue={(id) => navigateToPage(`/detail/${id}`)} 
               isDarkMode={isDarkMode}
             />
           )}
-          {currentView === 'submit' && (
+          {view === 'post' && (
             <SubmissionForm 
               userLocation={userLocation} 
-              onComplete={() => navigate('feed')} 
+              onComplete={() => navigateToPage('/feed')} 
               isDarkMode={isDarkMode}
             />
           )}
-          {currentView === 'detail' && selectedIssueId && (
+          {view === 'detail' && detailId && (
             <IssueDetail 
-              issueId={selectedIssueId} 
+              issueId={detailId} 
               userLocation={userLocation}
-              onBack={() => navigate('feed')} 
+              onBack={() => navigateToPage('/feed')} 
               isDarkMode={isDarkMode}
             />
           )}
-          {currentView === 'profile' && (
+          {view === 'profile' && (
             <Profile 
               session={session} 
-              viewedUserId={selectedProfileId}
+              viewedUserId={detailId}
               isDarkMode={isDarkMode} 
-              onSelectIssue={(id) => navigate('detail', id)} 
+              onSelectIssue={(id) => navigateToPage(`/detail/${id}`)} 
             />
           )}
-          {currentView === 'leaderboard' && (
+          {view === 'leaderboard' && (
             <Leaderboard 
               isDarkMode={isDarkMode} 
-              onSelectUser={(id) => navigate('profile', id)}
+              onSelectUser={(id) => navigateToPage(`/profile/${id}`)}
             />
           )}
         </div>
@@ -254,6 +304,7 @@ function App() {
           </div>
         </div>
       </main>
+    </div>
     </div>
   );
 }

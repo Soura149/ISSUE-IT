@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @layer base {
   body {
     @apply bg-white text-black font-sans antialiased;
@@ -9,4 +11,23 @@
 /* Base Spinner for loading states */
 .spinner {
   @apply w-8 h-8 border-4 border-black border-t-transparent rounded-full animate-spin;
+}
+
+/* Custom Text Stroke Utilities */
+.text-stroke-black {
+  -webkit-text-stroke: 2px black;
+  color: transparent;
+}
+.text-stroke-white {
+  -webkit-text-stroke: 2px white;
+  color: transparent;
+}
+
+/* Marquee Animation */
+@keyframes marquee {
+  0% { transform: translateX(0%); }
+  100% { transform: translateX(-50%); }
+}
+.animate-marquee {
+  animation: marquee 15s linear infinite;
 }
