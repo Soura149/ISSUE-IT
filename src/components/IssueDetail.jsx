@@ -32,6 +32,8 @@ const IssueDetail = ({ issueId, userLocation, onBack, isDarkMode, session }) => 
   const [hasVouched, setHasVouched] = useState(false);
   const [hasUpvoted, setHasUpvoted] = useState(false);
   const [hasDownvoted, setHasDownvoted] = useState(false);
+  const [pendingProofFile, setPendingProofFile] = useState(null);
+  const [pendingProofPreview, setPendingProofPreview] = useState(null);
 
   const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL;
   const isAdmin = session?.email && session.email === ADMIN_EMAIL;
@@ -114,21 +116,29 @@ const IssueDetail = ({ issueId, userLocation, onBack, isDarkMode, session }) => 
     }
   };
 
-  const handleProofUpload = async (e) => {
+  const handleProofSelection = (e) => {
     const file = e.target.files && e.target.files[0];
     if (!file) return;
+    setPendingProofFile(file);
+    setPendingProofPreview(URL.createObjectURL(file));
+  };
+
+  const submitProofForScan = async () => {
+    if (!pendingProofFile) return;
 
     setUploadingProof(true);
     setError('');
     try {
-      const validation = await verifyResolutionImage(issue.photo_url, file);
+      const validation = await verifyResolutionImage(issue.photo_url, pendingProofFile);
       if (!validation.isSuccessfullyResolved) {
         setError(`RESOLUTION REJECTED // ${validation.verificationDetails.toUpperCase()}`);
         setUploadingProof(false);
+        setPendingProofFile(null);
+        setPendingProofPreview(null);
         return;
       }
 
-      const imageUrl = await uploadImageToCloudinary(file);
+      const imageUrl = await uploadImageToCloudinary(pendingProofFile);
       setUploadingProof(false);
       setCvSimulating(true);
 
@@ -137,6 +147,8 @@ const IssueDetail = ({ issueId, userLocation, onBack, isDarkMode, session }) => 
           await submitResolutionProof(issueId, imageUrl);
           const data = await getIssue(issueId);
           setIssue(data);
+          setPendingProofFile(null);
+          setPendingProofPreview(null);
         } catch (err) {
           setError(err.message);
         } finally {
@@ -148,6 +160,8 @@ const IssueDetail = ({ issueId, userLocation, onBack, isDarkMode, session }) => 
       console.error("Resolution verification failed:", err);
       setError("Failed to verify resolution image. Please try again.");
       setUploadingProof(false);
+      setPendingProofFile(null);
+      setPendingProofPreview(null);
     }
   };
 
@@ -156,7 +170,7 @@ const IssueDetail = ({ issueId, userLocation, onBack, isDarkMode, session }) => 
     setError('');
     try {
       const updatedIssue = await vouchForResolution(issueId);
-      if (updatedIssue.status === 'UNDER_PROCESS' && (updatedIssue.verification_upvotes || 0) >= 1) {
+      if (updatedIssue.status === 'UNDER_PROCESS' && (updatedIssue.verification_upvotes || 0) >= 3) {
         updatedIssue.status = 'SOLVED';
       }
       setIssue(updatedIssue);
@@ -398,10 +412,30 @@ Contact/Email: ${contact}`;
               <div className={`w-full block text-center font-mono font-bold text-[10px] md:text-xs border-4 p-3 uppercase tracking-wider ${isDarkMode ? 'bg-zinc-800 border-white text-white' : 'bg-gray-100 border-black text-black'}`}>
                 Analyzing image differences via Vision API...
               </div>
+            ) : pendingProofPreview ? (
+              <div className="flex flex-col gap-4">
+                <div className={`border-4 relative overflow-hidden bg-black flex justify-center items-center h-40 md:h-48 ${isDarkMode ? 'border-white' : 'border-black'}`}>
+                  <img src={pendingProofPreview} alt="Pending Resolution" className="max-w-full max-h-full object-contain" />
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => { setPendingProofFile(null); setPendingProofPreview(null); }}
+                    className={`flex-1 font-mono font-bold text-[10px] md:text-xs border-4 p-3 uppercase cursor-pointer transition-colors tracking-wider ${isDarkMode ? 'bg-zinc-800 text-white border-white hover:bg-white hover:text-black' : 'bg-gray-100 text-black border-black hover:bg-black hover:text-white'}`}
+                  >
+                    CANCEL
+                  </button>
+                  <button
+                    onClick={submitProofForScan}
+                    className={`flex-1 font-mono font-bold text-[10px] md:text-xs border-4 p-3 uppercase cursor-pointer transition-colors tracking-wider ${isDarkMode ? 'bg-white text-black border-white hover:bg-zinc-800 hover:text-white' : 'bg-black text-white border-black hover:bg-white hover:text-black'}`}
+                  >
+                    SCAN WITH AI
+                  </button>
+                </div>
+              </div>
             ) : (
               <label className={`w-full block text-center font-mono font-bold text-[10px] md:text-xs border-4 p-3 uppercase cursor-pointer transition-colors tracking-wider ${isDarkMode ? 'bg-black text-white border-white hover:bg-white hover:text-black' : 'bg-white text-black border-black hover:bg-black hover:text-white'}`}>
                 UPLOAD RESOLVED PHOTO
-                <input type="file" className="hidden" accept="image/*" onChange={handleProofUpload} />
+                <input type="file" className="hidden" accept="image/*" onChange={handleProofSelection} />
               </label>
             )}
           </div>
@@ -419,7 +453,7 @@ Contact/Email: ${contact}`;
           !isPoster ? (
             <div className={`border-t-4 pt-6 flex flex-col gap-4 ${isDarkMode ? 'border-white' : 'border-black'}`}>
               <div className={`font-mono text-center text-xs md:text-sm font-bold p-2 border-2 ${isDarkMode ? 'border-white bg-zinc-900 text-white' : 'border-black bg-white text-black'}`}>
-                VERIFICATION VOTES: {issue.verification_upvotes || 0} / 1
+                VERIFICATION VOTES: {issue.verification_upvotes || 0} / 3
               </div>
               <button
                 onClick={handleVouch}
@@ -432,7 +466,7 @@ Contact/Email: ${contact}`;
           ) : (
             <div className={`border-t-4 pt-6 flex flex-col gap-4 ${isDarkMode ? 'border-white' : 'border-black'}`}>
               <div className={`font-mono text-center text-xs md:text-sm font-bold p-2 border-2 ${isDarkMode ? 'border-white bg-zinc-900 text-white' : 'border-black bg-white text-black'}`}>
-                VERIFICATION VOTES: {issue.verification_upvotes || 0} / 1
+                VERIFICATION VOTES: {issue.verification_upvotes || 0} / 3
               </div>
               <div className={`border-4 p-4 text-center font-black uppercase text-sm md:text-base ${isDarkMode ? 'bg-zinc-800 border-white text-white' : 'bg-gray-100 border-black text-black'}`}>
                 Awaiting community verification...

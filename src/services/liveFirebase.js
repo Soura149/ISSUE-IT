@@ -67,9 +67,9 @@ export const calculateDistance = (lat1, lon1, lat2, lon2) => {
   return R * c; // in metres
 };
 
-// Helper to heal old issues that met the new threshold of 1 vouch
+// Helper to heal old issues that met the new threshold of 3 vouches
 const healIssue = (issue) => {
-  if (issue.status === 'UNDER_PROCESS' && (issue.verification_upvotes || 0) >= 1) {
+  if (issue.status === 'UNDER_PROCESS' && (issue.verification_upvotes || 0) >= 3) {
     return { ...issue, status: 'SOLVED' };
   }
   return issue;
@@ -509,9 +509,9 @@ export const submitResolutionProof = async (issueId, imageUrl) => {
       const issue = issueDoc.data();
 
       const issueUpdates = {
-        status: "SOLVED",
+        status: "UNDER_PROCESS",
         resolved_image_url: imageUrl,
-        verification_upvotes: 1
+        verification_upvotes: 0
       };
       
       transaction.update(issueRef, issueUpdates);
@@ -584,9 +584,9 @@ export const vouchForResolution = async (issueId) => {
       }
 
       let newStatus = issue.status;
-      if (newVerificationUpvotes >= 1) {
+      if (newVerificationUpvotes >= 3) {
         newStatus = "SOLVED";
-      } else if (newVerificationUpvotes < 1) {
+      } else if (newVerificationUpvotes < 3) {
         newStatus = "UNDER_PROCESS";
       }
 
