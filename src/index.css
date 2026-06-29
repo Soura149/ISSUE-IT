@@ -1,5 +1,15 @@
 @import "tailwindcss";
 
+*, ::before, ::after {
+  box-sizing: border-box !important;
+}
+html, body, #root {
+  width: 100%;
+  overflow-x: clip !important;
+  margin: 0;
+  padding: 0;
+}
+
 @custom-variant dark (&:where(.dark, .dark *));
 
 @layer base {

@@ -23,6 +23,7 @@ function App() {
   const [totalIssuesCount, setTotalIssuesCount] = useState(0);
   const [resolvedIssuesCount, setResolvedIssuesCount] = useState(0);
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [locationError, setLocationError] = useState(false);
 
   useEffect(() => {
     // 1. Frictionless Identity Layer
@@ -47,14 +48,16 @@ function App() {
                 latitude: position.coords.latitude,
                 longitude: position.coords.longitude
               });
+              setLocationError(false);
             },
             (error) => {
               console.error("Error getting location", error);
-              // Fallback for demo if GPS blocked
-              alert("GPS blocked. Using mock location (Kolkata).");
-              setUserLocation({ latitude: 22.4841, longitude: 87.3214 });
+              setUserLocation(null);
+              setLocationError(true);
             }
           );
+        } else {
+          setLocationError(true);
         }
       } else {
         setUserProfile(null);
@@ -158,8 +161,7 @@ function App() {
   }
 
   return (
-    <div className={isDarkMode ? 'dark' : ''}>
-      <div className={`w-full min-h-screen px-2 sm:px-4 md:px-8 box-border ${isDarkMode ? 'bg-black text-white' : 'bg-white text-black'} font-sans transition-colors duration-300`}>
+    <div className={`w-screen max-w-full min-h-screen overflow-x-clip bg-zinc-50 dark:bg-zinc-950 flex flex-col font-sans transition-colors duration-300 ${isDarkMode ? 'dark text-white' : 'text-black'}`}>
       {/* Sidebar Backdrop Overlay */}
       {isSidebarOpen && (
         <div 
@@ -252,7 +254,7 @@ function App() {
       </div>
 
       {/* Top Navbar */}
-      <nav className={`w-full border-b-4 px-4 py-3 flex justify-between items-center sticky top-0 z-30 transition-colors duration-300 ${isDarkMode ? 'border-white bg-zinc-900' : 'border-black bg-white'}`}>
+      <nav className={`sticky top-0 z-50 w-full h-16 bg-white dark:bg-zinc-900 border-b-4 border-black px-4 flex items-center justify-between shadow-[0_4px_0_0_rgba(0,0,0,1)] transition-colors duration-300 ${isDarkMode ? 'border-white shadow-[0_4px_0_0_rgba(255,255,255,1)]' : ''}`}>
         <div className="flex items-center gap-4">
           <button 
             onClick={() => isOnboarded && setIsSidebarOpen(true)}
@@ -287,13 +289,16 @@ function App() {
         </div>
       </nav>
 
-      {/* Main Content Area */}
-      <main className="w-full max-w-7xl mx-auto py-4 md:py-6 grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-8 items-start box-border">
+      {/* Main Workspace Section */}
+      <div className="flex flex-col flex-1 w-full relative">
+        {/* Main Content Area */}
+        <main className="flex-1 w-full max-w-full overflow-x-clip px-4 py-6 box-border mx-auto grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-8 items-start max-w-7xl">
         {/* Left/Center Column - Active Feed */}
         <div className="lg:col-span-2 w-full">
           {view === 'feed' && (
             <LocationFeed 
               userLocation={userLocation} 
+              locationError={locationError}
               onSelectIssue={(id) => navigateToPage(`/detail/${id}`)} 
               isDarkMode={isDarkMode}
               session={session}
@@ -334,7 +339,7 @@ function App() {
         </div>
 
         {/* Right Column - Brutalist Info Widget */}
-        <div className="lg:col-span-1 flex flex-col gap-6 w-full lg:sticky lg:top-24">
+        <div className="lg:col-span-1 flex flex-col gap-6 w-full sticky top-24 self-start bg-transparent border-none">
           <div className={`border-4 rounded-3xl p-6 font-mono flex flex-col gap-4 relative transition-all duration-300 ${isDarkMode ? 'border-white bg-zinc-900 shadow-[6px_6px_0px_0px_rgba(255,255,255,1)]' : 'border-black bg-white shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]'}`}>
             
             {/* Removed Geometric Sticker Accent */}
@@ -371,8 +376,8 @@ function App() {
             </p>
           </div>
         </div>
-      </main>
-    </div>
+        </main>
+      </div>
     </div>
   );
 }

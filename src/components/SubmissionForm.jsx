@@ -26,6 +26,12 @@ const SubmissionForm = ({ userLocation, onComplete, isDarkMode, userProfile }) =
   const [success, setSuccess] = useState(false);
   const [isImageValidated, setIsImageValidated] = useState(false);
   const [duplicateThreat, setDuplicateThreat] = useState(null);
+  const [formCoordinates, setFormCoordinates] = useState(userLocation);
+  const [formLocationError, setFormLocationError] = useState(null);
+
+  React.useEffect(() => {
+    if (userLocation) setFormCoordinates(userLocation);
+  }, [userLocation]);
   const [formData, setFormData] = useState({
     category: '',
     severity: 'medium',
@@ -85,10 +91,36 @@ const SubmissionForm = ({ userLocation, onComplete, isDarkMode, userProfile }) =
     }
   };
 
+  const handlePinLocation = () => {
+    setFormLocationError(null);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setFormCoordinates({
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude
+        });
+      },
+      (error) => {
+        if (error.code === 1) { // PERMISSION_DENIED
+          const retry = window.confirm("GPS Access is blocked by your browser.\n\nPlease click the site settings (lock icon) in your URL bar, switch Location to 'Allow', and click OK to try again.");
+          if (retry) {
+            handlePinLocation();
+          } else {
+            setFormLocationError("GPS ACCESS DENIED. PLEASE ENABLE LOCATION PERMISSIONS IN YOUR BROWSER SETTINGS TO CAPTURE COORDINATES.");
+          }
+        } else {
+          setFormLocationError("UNABLE TO RETRIEVE LOCATION. PLEASE CHECK YOUR CONNECTION OR DEVICE GPS.");
+        }
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!userLocation) {
-      alert("Location is required to submit an issue.");
+    const finalLocation = formCoordinates || userLocation;
+    if (!finalLocation) {
+      alert("Location is required to submit an issue. Please click 'PIN EXACT LOCATION'.");
       return;
     }
     setSubmitting(true);
@@ -112,8 +144,8 @@ const SubmissionForm = ({ userLocation, onComplete, isDarkMode, userProfile }) =
         if (issue.category !== (formData.category || 'other')) return false;
         
         const dist = calculateDistance(
-          userLocation.latitude, 
-          userLocation.longitude, 
+          finalLocation.latitude, 
+          finalLocation.longitude, 
           issue.latitude, 
           issue.longitude
         );
@@ -142,8 +174,8 @@ const SubmissionForm = ({ userLocation, onComplete, isDarkMode, userProfile }) =
       }
 
       await createIssue({
-        latitude: userLocation.latitude,
-        longitude: userLocation.longitude,
+        latitude: finalLocation.latitude,
+        longitude: finalLocation.longitude,
         locationName: formData.locationName,
         category: formData.category || 'other',
         severity: formData.severity || 'low',
@@ -291,7 +323,29 @@ const SubmissionForm = ({ userLocation, onComplete, isDarkMode, userProfile }) =
         )}
 
         {/* Auto-populated fields */}
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-4">
+          <button
+            type="button"
+            onClick={handlePinLocation}
+            className="bg-[#FFDE4D] text-black border-4 border-black p-3 font-mono font-black text-xs sm:text-sm uppercase shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:-translate-x-1 hover:-translate-y-1 transition-all"
+          >
+            📍 PIN EXACT LOCATION
+          </button>
+          
+          {formLocationError && (
+            <div className="bg-[#FF3333] text-white border-4 border-black p-4 font-mono font-black text-xs sm:text-sm uppercase shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] w-full">
+              {formLocationError}
+            </div>
+          )}
+
+          {formCoordinates && (
+            <div className={`font-mono text-xs font-bold p-2 border-2 ${isDarkMode ? 'border-white bg-zinc-800' : 'border-black bg-gray-100'}`}>
+              COORDINATES ACQUIRED: {formCoordinates.latitude.toFixed(6)}, {formCoordinates.longitude.toFixed(6)}
+            </div>
+          )}
+        </div>
+
+        <div className="flex flex-col gap-2 mt-4">
           <label className="font-black uppercase text-xl">Location Landmark</label>
           <input 
             type="text" 

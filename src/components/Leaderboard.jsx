@@ -41,19 +41,19 @@ const Leaderboard = ({ isDarkMode, onSelectUser }) => {
   }
 
   return (
-    <div className={`w-full max-w-4xl mx-auto px-4 md:px-0 py-6 flex flex-col gap-8 ${isDarkMode ? 'text-white' : 'text-black'}`}>
-      <h1 className={`text-5xl font-black uppercase tracking-tighter mb-2 ${isDarkMode ? 'text-white' : 'text-black'}`}>
+    <div className={`w-full max-w-2xl mx-auto flex flex-col gap-6 ${isDarkMode ? 'text-white' : 'text-black'}`}>
+      <h1 className={`text-5xl font-black uppercase tracking-tighter mb-2 whitespace-normal break-words ${isDarkMode ? 'text-white' : 'text-black'}`}>
         USER RANKING DASHBOARD
       </h1>
 
       {users.length > 0 && (
-        <div className="flex flex-col space-y-3 w-full">
+        <div className="w-full max-w-2xl mx-auto flex flex-col gap-6 items-center">
           {users.map((user, index) => {
             const displayUsername = user.displayName ? user.displayName.toUpperCase() : (user.email ? user.email.split('@')[0].toUpperCase() : 'ANONYMOUS CITIZEN');
             return (
               <div 
                 key={user.id} 
-                className={`flex justify-between items-center border-4 p-4 transition-all hover:-translate-x-1 hover:-translate-y-1 rounded-3xl mb-4 ${index === 0 ? 'bg-[#FFCC00] text-black border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]' : isDarkMode ? 'bg-black border-white shadow-[6px_6px_0px_0px_rgba(255,255,255,1)]' : 'bg-white border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]'}`}
+                className={`flex justify-between items-center w-full box-border border-4 p-4 transition-all hover:-translate-x-1 hover:-translate-y-1 rounded-3xl mb-4 ${index === 0 ? 'bg-[#FFCC00] text-black border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]' : isDarkMode ? 'bg-black border-white shadow-[6px_6px_0px_0px_rgba(255,255,255,1)]' : 'bg-white border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]'}`}
               >
                 <div className="flex items-center gap-4">
                   <span className={`font-mono font-black text-lg sm:text-xl w-10 ${index === 0 ? 'text-black drop-shadow-sm' : isDarkMode ? 'text-neutral-500' : 'text-neutral-400'}`}>
@@ -76,7 +76,7 @@ const Leaderboard = ({ isDarkMode, onSelectUser }) => {
                   )}
                   <span 
                     onClick={() => handleUserNavigation(user.id)}
-                    className={`font-black uppercase text-sm sm:text-base tracking-tight truncate max-w-[150px] sm:max-w-xs cursor-pointer hover:underline decoration-4 ${index === 0 ? 'text-black decoration-black' : isDarkMode ? 'text-white decoration-white' : 'text-black decoration-black'}`}
+                    className={`font-black uppercase text-sm sm:text-base tracking-tight whitespace-normal break-words cursor-pointer hover:underline decoration-4 ${index === 0 ? 'text-black decoration-black' : isDarkMode ? 'text-white decoration-white' : 'text-black decoration-black'}`}
                   >
                     {displayUsername}
                   </span>
