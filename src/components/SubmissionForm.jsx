@@ -17,21 +17,22 @@ const hasKeywordOverlap = (text1, text2) => {
   return tokens1.some(token => tokens2.includes(token));
 };
 
-const SubmissionForm = ({ userLocation, onComplete, isDarkMode }) => {
+const SubmissionForm = ({ userLocation, onComplete, isDarkMode, userProfile }) => {
   const [file, setFile] = useState(null);
   const [photoUrl, setPhotoUrl] = useState(null);
   const [processing, setProcessing] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
+  const [isImageValidated, setIsImageValidated] = useState(false);
   const [duplicateThreat, setDuplicateThreat] = useState(null);
   const [formData, setFormData] = useState({
     category: '',
     severity: 'medium',
     description: '',
     locationName: '',
-    reportedLocality: '',
-    reportedPIN: '',
+    reportedLocality: userProfile?.localArea || '',
+    reportedPIN: userProfile?.pinCode || '',
     targetVouchesRequired: 3,
   });
   
@@ -41,36 +42,34 @@ const SubmissionForm = ({ userLocation, onComplete, isDarkMode }) => {
   const handleFileChange = async (e) => {
     const selectedFile = e.target.files[0];
     if (selectedFile) {
-      setProcessing(true);
+      setFile(selectedFile);
+      setPhotoUrl(URL.createObjectURL(selectedFile));
       setError(null);
-      try {
-        const validation = await validateCivicIssueImage(selectedFile);
-        if (!validation.isValidCivicIssue) {
-          setError(`INVALID ASSET // THIS PICTURE DOES NOT REPRESENT A CIVIC HAZARD. (${validation.reason})`);
-          clearImage();
-          setProcessing(false);
-          return;
-        }
-        setFile(selectedFile);
-        setPhotoUrl(URL.createObjectURL(selectedFile));
-      } catch (err) {
-        console.error("Image validation failed:", err);
-        setError("Failed to validate image. Please try again.");
-      } finally {
-        setProcessing(false);
-      }
+      setIsImageValidated(false);
     }
   };
 
   const clearImage = () => {
     setFile(null);
     setPhotoUrl(null);
+    setIsImageValidated(false);
   };
 
   const handleScanImage = async () => {
     if (!file) return;
     setProcessing(true);
+    setError(null);
     try {
+      if (!isImageValidated) {
+        const validation = await validateCivicIssueImage(file);
+        if (!validation.isValidCivicIssue) {
+          setError(`INVALID ASSET // THIS PICTURE DOES NOT REPRESENT A CIVIC HAZARD. (${validation.reason})`);
+          setProcessing(false);
+          return;
+        }
+        setIsImageValidated(true);
+      }
+
       const aiResponse = await classifyUploadedImage(file);
       setFormData(prev => ({
         ...prev,
@@ -79,8 +78,8 @@ const SubmissionForm = ({ userLocation, onComplete, isDarkMode }) => {
         description: aiResponse.auto_description || prev.description
       }));
     } catch (error) {
-      console.error("AI classification failed", error);
-      alert("AI scan failed. Please fill manually.");
+      console.error("AI scan failed", error);
+      setError("AI scan failed. Please fill manually.");
     } finally {
       setProcessing(false);
     }
@@ -96,6 +95,16 @@ const SubmissionForm = ({ userLocation, onComplete, isDarkMode }) => {
     setError(null);
     setSuccess(false);
     try {
+      if (!isImageValidated) {
+        const validation = await validateCivicIssueImage(file);
+        if (!validation.isValidCivicIssue) {
+          setError(`INVALID ASSET // THIS PICTURE DOES NOT REPRESENT A CIVIC HAZARD. (${validation.reason})`);
+          setSubmitting(false);
+          return;
+        }
+        setIsImageValidated(true);
+      }
+
       // Deduplication Check
       const DRIFT_RADIUS_THRESHOLD_METERS = 100;
       const existingIssues = await getIssues();
@@ -158,11 +167,7 @@ const SubmissionForm = ({ userLocation, onComplete, isDarkMode }) => {
   return (
     <div className={`w-full max-w-2xl mx-auto px-4 box-border flex flex-col gap-6 relative ${isDarkMode ? 'text-white' : 'text-black'}`}>
       
-      {error && (
-        <div className="border-4 border-black bg-red-500 text-white p-4 font-mono font-bold shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:border-white uppercase z-10">
-          {error}
-        </div>
-      )}
+
       
       {success && (
         <div className="border-4 border-black bg-[#00FF66] text-black p-4 font-mono font-bold shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:border-white uppercase z-10 flex items-center justify-between">
@@ -279,6 +284,12 @@ const SubmissionForm = ({ userLocation, onComplete, isDarkMode }) => {
           />
         </div>
 
+        {error && (
+          <div className="bg-[#FF3333] text-white border-4 border-black p-4 font-mono font-black text-xs sm:text-sm uppercase shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] w-full">
+            {error}
+          </div>
+        )}
+
         {/* Auto-populated fields */}
         <div className="flex flex-col gap-2">
           <label className="font-black uppercase text-xl">Location Landmark</label>
@@ -332,7 +343,7 @@ const SubmissionForm = ({ userLocation, onComplete, isDarkMode }) => {
         </div>
 
         <div className="flex flex-col gap-2">
-          <label className="font-black uppercase text-xl text-[#FF0055] dark:text-[#00FF66]">🎯 REQUIRED NEIGHBORHOOD VOUCHES</label>
+          <label className="font-black uppercase text-xl text-[#FF0055] dark:text-[#00FF66]">REQUIRED NEIGHBORHOOD VOUCHES</label>
           <input 
             type="number" 
             min="1" 

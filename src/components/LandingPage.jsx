@@ -26,7 +26,7 @@ const LandingPage = ({ onLogin, isDarkMode, setIsDarkMode }) => {
               onClick={onLogin}
               className="bg-black text-white dark:bg-white dark:text-black px-6 py-2.5 text-sm md:text-base border-2 border-transparent dark:border-black rounded-full hover:-translate-y-1 hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:hover:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] transition-all active:translate-y-0"
             >
-              Enter Dashboard ↗
+              Enter Dashboard -{'>'}
             </button>
           </div>
         </nav>
@@ -55,7 +55,7 @@ const LandingPage = ({ onLogin, isDarkMode, setIsDarkMode }) => {
             onClick={onLogin}
             className="mt-8 bg-[#00FF66] text-black px-8 py-4 border-4 border-black rounded-full font-mono font-black uppercase text-lg hover:-translate-x-1 hover:-translate-y-1 hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] dark:hover:shadow-[8px_8px_0px_0px_rgba(255,255,255,1)] transition-all active:translate-x-0 active:translate-y-0"
           >
-            Apply Now ↗
+            Apply Now -{'>'}
           </button>
           
 
@@ -145,7 +145,7 @@ const LandingPage = ({ onLogin, isDarkMode, setIsDarkMode }) => {
               className="relative self-center w-11/12 md:w-3/4 bg-white dark:bg-black border-4 border-black dark:border-white p-6 rounded-2xl rotate-[2deg] shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] dark:shadow-[8px_8px_0px_0px_rgba(255,255,255,1)] hover:-translate-y-1 transition-all"
             >
               <h3 className="font-black uppercase text-xl mb-2">Vision-API Verification Pipeline</h3>
-              <p className="font-mono text-sm font-bold">Explaining the 3-stage validation cycle: Photo Proof submission ➔ Simulated AI Difference Scan ➔ Community Vouch consensus gating.</p>
+              <p className="font-mono text-sm font-bold">Explaining the 3-stage validation cycle: Photo Proof submission -{'>'} Simulated AI Difference Scan -{'>'} Community Vouch consensus gating.</p>
             </motion.div>
 
             {/* Step 3 */}
@@ -202,7 +202,7 @@ const LandingPage = ({ onLogin, isDarkMode, setIsDarkMode }) => {
                 </div>
                 <div className="w-full h-10 border-4 border-black dark:border-white rounded-lg flex items-center px-2 justify-between">
                   <div className="h-2 w-1/3 bg-black/20 dark:bg-white/20 rounded-md"></div>
-                  <div className="w-6 h-6 bg-[#FFCC00] border-2 border-black rounded-md flex items-center justify-center text-[10px]">↗</div>
+                  <div className="w-6 h-6 bg-[#FFCC00] border-2 border-black rounded-md flex items-center justify-center text-[10px]">{'>'}</div>
                 </div>
               </div>
             </div>
@@ -250,7 +250,7 @@ const LandingPage = ({ onLogin, isDarkMode, setIsDarkMode }) => {
               className="self-end w-[90%] md:w-[80%] bg-[#00FF66] dark:bg-green-900 border-4 border-black dark:border-white p-6 md:p-8 rounded-3xl relative shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] dark:shadow-[8px_8px_0px_0px_rgba(255,255,255,1)] hover:-translate-y-1 transition-all text-black dark:text-white"
             >
               <div className="absolute -top-6 -left-6 bg-red-500 border-4 border-black w-12 h-12 flex items-center justify-center font-black rounded-full rotate-[-15deg] text-xl">
-                🚫
+                X
               </div>
               <h3 className="font-black uppercase text-2xl mb-2">Please refrain from spamming</h3>
               <p className="font-mono text-sm md:text-base font-bold">

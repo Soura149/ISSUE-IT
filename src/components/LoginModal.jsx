@@ -29,7 +29,7 @@ const LoginModal = ({ onSignIn, onClose }) => {
           onClick={onSignIn}
           className="w-full bg-[#FFCC00] text-black font-mono font-black py-4 px-4 border-4 border-black uppercase tracking-wider hover:-translate-y-1 active:translate-y-0 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:shadow-[0px_0px_0px_0px_rgba(0,0,0,1)] transition-all flex items-center justify-center gap-3"
         >
-          <span className="text-2xl">🔑</span> SIGN IN WITH GOOGLE
+          <span className="text-2xl"></span> SIGN IN WITH GOOGLE
         </button>
 
       </div>

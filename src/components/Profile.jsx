@@ -5,7 +5,7 @@ import { getUserIssues } from '../services/liveFirebase';
 import { getSeverityStyles } from '../utils/theme';
 import { AlertTriangle, Clock, Eye, EyeOff } from 'lucide-react';
 
-const Profile = ({ session, viewedUserId, isDarkMode, onSelectIssue }) => {
+const Profile = ({ session, viewedUserId, isDarkMode, onSelectIssue, onProfileUpdate }) => {
   const [issues, setIssues] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('active'); // 'active' or 'resolved'
@@ -13,6 +13,7 @@ const Profile = ({ session, viewedUserId, isDarkMode, onSelectIssue }) => {
   const [editingLocality, setEditingLocality] = useState(false);
   const [localityForm, setLocalityForm] = useState({ localArea: '', pinCode: '', state: '' });
   const [savingLocality, setSavingLocality] = useState(false);
+  const [pinError, setPinError] = useState('');
   const targetUserId = viewedUserId || session?.uid;
   const isOwnProfile = !viewedUserId || viewedUserId === session?.uid;
 
@@ -61,6 +62,14 @@ const Profile = ({ session, viewedUserId, isDarkMode, onSelectIssue }) => {
     fetchProfileAndIssues();
   }, [session, viewedUserId, targetUserId, isOwnProfile]);
 
+  const isOnboarded = profileData && profileData.localArea && profileData.pinCode;
+
+  useEffect(() => {
+    if (profileData && isOwnProfile && !isOnboarded) {
+      setEditingLocality(true);
+    }
+  }, [profileData, isOwnProfile, isOnboarded]);
+
   const handleToggleEmailVisibility = async () => {
     if (!isOwnProfile) return;
     const newVisibility = !profileData?.isEmailVisible;
@@ -78,6 +87,12 @@ const Profile = ({ session, viewedUserId, isDarkMode, onSelectIssue }) => {
   const handleSaveLocality = async (e) => {
     e.preventDefault();
     if (!isOwnProfile) return;
+    
+    if (!/^\d{6}$/.test(localityForm.pinCode)) {
+      setPinError('INVALID PIN // MUST BE EXACTLY 6 DIGITS');
+      return;
+    }
+    
     setSavingLocality(true);
     try {
       const userRef = doc(db, 'users', session.uid);
@@ -88,6 +103,9 @@ const Profile = ({ session, viewedUserId, isDarkMode, onSelectIssue }) => {
       });
       setProfileData(prev => ({ ...prev, ...localityForm }));
       setEditingLocality(false);
+      if (typeof onProfileUpdate === 'function') {
+        onProfileUpdate(localityForm);
+      }
     } catch (error) {
       console.error("Failed to save locality", error);
     } finally {
@@ -224,10 +242,26 @@ const Profile = ({ session, viewedUserId, isDarkMode, onSelectIssue }) => {
                 <input 
                   type="text" 
                   value={localityForm.pinCode}
-                  onChange={e => setLocalityForm({...localityForm, pinCode: e.target.value})}
+                  onChange={e => {
+                    const val = e.target.value;
+                    if (/^\d*$/.test(val)) {
+                      if (val.length > 6) return;
+                      setLocalityForm({...localityForm, pinCode: val});
+                      if (val.length > 0 && val.length < 6) {
+                        setPinError('INVALID PIN // MUST BE EXACTLY 6 DIGITS');
+                      } else {
+                        setPinError('');
+                      }
+                    }
+                  }}
                   className={`border-2 p-2 focus:outline-none ${isDarkMode ? 'bg-zinc-900 border-gray-600 focus:border-white text-white' : 'bg-white border-gray-400 focus:border-black text-black'}`}
                   placeholder="e.g. 700091"
                 />
+                {pinError && (
+                  <div className="bg-[#FF3333] text-white border-2 border-black p-2 font-mono font-black text-xs uppercase mt-1 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+                    {pinError}
+                  </div>
+                )}
               </div>
               <div className="flex flex-col gap-1">
                 <label className="font-bold uppercase">State / Province</label>
@@ -240,20 +274,23 @@ const Profile = ({ session, viewedUserId, isDarkMode, onSelectIssue }) => {
                 />
               </div>
               <div className="flex gap-2 mt-2">
-                <button 
-                  type="button"
-                  onClick={() => {
-                    setEditingLocality(false);
-                    setLocalityForm({ 
-                      localArea: profileData?.localArea || '', 
-                      pinCode: profileData?.pinCode || '', 
-                      state: profileData?.state || '' 
-                    });
-                  }}
-                  className={`flex-1 border-2 py-2 font-bold uppercase transition-all ${isDarkMode ? 'border-gray-600 text-gray-300 hover:bg-zinc-800' : 'border-gray-400 text-gray-600 hover:bg-gray-100'}`}
-                >
-                  CANCEL
-                </button>
+                {!(!isOnboarded) && (
+                  <button 
+                    type="button"
+                    onClick={() => {
+                      setEditingLocality(false);
+                      setLocalityForm({ 
+                        localArea: profileData?.localArea || '', 
+                        pinCode: profileData?.pinCode || '', 
+                        state: profileData?.state || '' 
+                      });
+                      setPinError('');
+                    }}
+                    className={`flex-1 border-2 py-2 font-bold uppercase transition-all ${isDarkMode ? 'border-gray-600 text-gray-300 hover:bg-zinc-800' : 'border-gray-400 text-gray-600 hover:bg-gray-100'}`}
+                  >
+                    CANCEL
+                  </button>
+                )}
                 <button 
                   type="submit"
                   disabled={savingLocality}

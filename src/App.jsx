@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { onAuthStateChanged, signInWithPopup, signOut } from 'firebase/auth';
-import { auth, googleProvider } from './services/firebaseConfig';
+import { doc, getDoc } from 'firebase/firestore';
+import { auth, googleProvider, db } from './services/firebaseConfig';
 import { getIssues, syncUserProfile } from './services/liveFirebase';
 import LocationFeed from './components/LocationFeed';
 import SubmissionForm from './components/SubmissionForm';
@@ -13,6 +14,7 @@ import { Menu } from 'lucide-react';
 
 function App() {
   const [session, setSession] = useState(null);
+  const [userProfile, setUserProfile] = useState(null);
   const [isAuthLoading, setIsAuthLoading] = useState(true);
   const [userLocation, setUserLocation] = useState(null);
   const [currentPath, setCurrentPath] = useState(window.location.pathname);
@@ -24,32 +26,41 @@ function App() {
 
   useEffect(() => {
     // 1. Frictionless Identity Layer
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setSession(user);
       if (user) {
-        syncUserProfile(user);
+        await syncUserProfile(user);
+        
+        const userRef = doc(db, 'users', user.uid);
+        const userSnap = await getDoc(userRef);
+        if (userSnap.exists()) {
+          setUserProfile(userSnap.data());
+        }
+
         setShowLoginModal(false);
+
+        // 2. GPS Aggregation Engine (Post-Auth)
+        if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(
+            (position) => {
+              setUserLocation({
+                latitude: position.coords.latitude,
+                longitude: position.coords.longitude
+              });
+            },
+            (error) => {
+              console.error("Error getting location", error);
+              // Fallback for demo if GPS blocked
+              alert("GPS blocked. Using mock location (Kolkata).");
+              setUserLocation({ latitude: 22.4841, longitude: 87.3214 });
+            }
+          );
+        }
+      } else {
+        setUserProfile(null);
       }
       setIsAuthLoading(false);
     });
-
-    // 2. GPS Aggregation Engine
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setUserLocation({
-            latitude: position.coords.latitude,
-            longitude: position.coords.longitude
-          });
-        },
-        (error) => {
-          console.error("Error getting location", error);
-          // Fallback for demo if GPS blocked
-          alert("GPS blocked. Using mock location (Kolkata).");
-          setUserLocation({ latitude: 22.4841, longitude: 87.3214 });
-        }
-      );
-    }
 
     // 3. Global Feed Count for Livestats
     const fetchGlobalStats = async () => {
@@ -89,18 +100,29 @@ function App() {
     // Unauthenticated protection
     if (!session && currentPath !== '/') {
       navigateToPage('/');
+      return;
     }
     
-    // Authenticated redirect from landing
-    if (session && currentPath === '/') {
-      navigateToPage('/feed');
+    // Authenticated redirect from landing and guardrail
+    if (session) {
+      const isOnboarded = userProfile && userProfile.localArea && userProfile.pinCode;
+      
+      if (!isOnboarded && userProfile && currentPath !== '/profile') {
+        navigateToPage('/profile');
+        return;
+      }
+      
+      if (isOnboarded && currentPath === '/') {
+        navigateToPage('/feed');
+      }
     }
-  }, [isAuthLoading, session, currentPath]);
+  }, [isAuthLoading, session, currentPath, userProfile]);
 
   // Derived state from currentPath
   const pathParts = currentPath.split('/').filter(Boolean);
   const view = pathParts[0] || 'landing';
   const detailId = pathParts[1] || null;
+  const isOnboarded = session && userProfile && userProfile.localArea && userProfile.pinCode;
 
   if (isAuthLoading) {
     return (
@@ -233,14 +255,35 @@ function App() {
       <nav className={`w-full border-b-4 px-4 py-3 flex justify-between items-center sticky top-0 z-30 transition-colors duration-300 ${isDarkMode ? 'border-white bg-zinc-900' : 'border-black bg-white'}`}>
         <div className="flex items-center gap-4">
           <button 
-            onClick={() => setIsSidebarOpen(true)}
-            className={`border-4 p-2 transition-colors ${isDarkMode ? 'border-white bg-zinc-900 text-white hover:bg-white hover:text-black' : 'border-black bg-white text-black hover:bg-black hover:text-white'}`}
+            onClick={() => isOnboarded && setIsSidebarOpen(true)}
+            disabled={!isOnboarded}
+            className={`border-4 p-2 transition-colors ${!isOnboarded ? 'opacity-50 cursor-not-allowed ' : ''}${isDarkMode ? 'border-white bg-zinc-900 text-white hover:bg-white hover:text-black' : 'border-black bg-white text-black hover:bg-black hover:text-white'}`}
           >
             <Menu strokeWidth={3} />
           </button>
           <div className={`text-xl sm:text-2xl md:text-3xl font-black uppercase tracking-tight flex items-center gap-2 ${isDarkMode ? 'text-white' : 'text-black'}`}>
             <span className={isDarkMode ? 'text-white text-3xl' : 'text-black text-3xl'}></span> ISSUE IT
           </div>
+        </div>
+
+        {/* Navbar Utilities Container */}
+        <div className="hidden sm:flex items-center gap-4 font-mono font-black text-xs uppercase">
+          <button 
+            onClick={() => setIsDarkMode(!isDarkMode)}
+            className={`px-3 py-1 border-2 transition-all ${isDarkMode ? 'border-white bg-white text-black' : 'border-black bg-black text-white'}`}
+          >
+            {isDarkMode ? 'LIGHT MODE' : 'DARK MODE'}
+          </button>
+          <button 
+            onClick={() => {
+              setIsSidebarOpen(false);
+              signOut(auth);
+              navigateToPage('/');
+            }}
+            className={`px-3 py-1 border-2 transition-all hover:bg-red-500 hover:text-white hover:border-red-500 ${isDarkMode ? 'border-white text-white' : 'border-black text-black'}`}
+          >
+            LOGOUT
+          </button>
         </div>
       </nav>
 
@@ -261,6 +304,7 @@ function App() {
               userLocation={userLocation} 
               onComplete={() => navigateToPage('/feed')} 
               isDarkMode={isDarkMode}
+              userProfile={userProfile}
             />
           )}
           {view === 'detail' && detailId && (
@@ -278,6 +322,7 @@ function App() {
               viewedUserId={detailId}
               isDarkMode={isDarkMode} 
               onSelectIssue={(id) => navigateToPage(`/detail/${id}`)} 
+              onProfileUpdate={(data) => setUserProfile(prev => ({ ...prev, ...data }))}
             />
           )}
           {view === 'leaderboard' && (
